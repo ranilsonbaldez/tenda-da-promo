@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Copy, Check, Flame } from "lucide-react";
 import { useState } from "react";
+import { CountdownTimer } from "./countdown-timer";
 
 interface OfferCardProps {
   offer: Offer;
@@ -14,6 +15,10 @@ interface OfferCardProps {
 
 export function OfferCard({ offer }: OfferCardProps) {
   const [copied, setCopied] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
+
+  // Se o temporizador chegar a zero em tempo real na ecrã, esconde o card
+  if (isExpired) return null;
 
   const handleAction = () => {
     if (offer.coupon_code) {
@@ -45,6 +50,16 @@ export function OfferCard({ offer }: OfferCardProps) {
             sizes="(max-width: 768px) 100vw, 250px"
           />
         </div>
+
+        {/* Relógio regressivo visual */}
+        {offer.expires_at && (
+          <div className="w-full mb-2 flex justify-start">
+            <CountdownTimer
+              expiresAt={offer.expires_at}
+              onExpire={() => setIsExpired(true)}
+            />
+          </div>
+        )}
 
         <div className="w-full flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">

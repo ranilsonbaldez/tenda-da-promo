@@ -3,12 +3,16 @@ import { OfferCard } from "@/components/offer-card";
 import { Offer } from "@/types";
 import { Flame, ShoppingBag } from "lucide-react";
 
-export const revalidate = 60;
+// Força a página a buscar dados atualizados do servidor a cada acesso
+export const revalidate = 0;
 
 export default async function HomePage() {
+  const now = new Date().toISOString();
+
   const { data: offers } = await supabase
     .from("offers")
     .select("*, stores(name, logo_url)")
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order("created_at", { ascending: false });
 
   return (
