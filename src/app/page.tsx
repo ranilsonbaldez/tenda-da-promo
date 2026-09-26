@@ -42,7 +42,7 @@ export default async function HomePage() {
           <div>
             <h1 className="text-2xl md:text-4xl font-extrabold flex items-center justify-center md:justify-start gap-2">
               <Flame className="w-8 h-8 text-orange-500 animate-pulse" /> As
-              melhores ofertas da internet
+              melhores ofertas da internet só aqui!
             </h1>
             <p className="text-zinc-400 mt-2 text-sm md:text-base">
               Selecionamos os melhores preços e cupons do Mercado Livre, Amazon,
