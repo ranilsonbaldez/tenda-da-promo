@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import { OfferCard } from "@/components/offer-card";
 import { Offer } from "@/types";
+import Link from "next/link";
+import { PlusCircle } from "lucide-react";
 
 // Força a página a buscar dados atualizados do servidor a cada acesso
 export const revalidate = 0;
@@ -76,10 +78,23 @@ export default async function HomePage() {
       </main>
 
       {/* Rodapé simples */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 py-6 text-center text-xs text-zinc-500">
-        © {new Date().getFullYear()} Tenda da Promo. Todos os direitos
-        reservados.
-      </footer>
+<footer className="w-full bg-zinc-900 text-zinc-400 py-6 mt-12 border-t border-zinc-800">
+      <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+        <p>© {new Date().getFullYear()} Tenda da Promo. Todos os direitos reservados.</p>
+        
+        {/* Link temporário de administração */}
+        <div className="flex items-center gap-2 bg-zinc-800/80 px-3 py-1.5 rounded-lg border border-zinc-700">
+          <span className="text-xs text-zinc-400 font-mono">[Atalho Temp]</span>
+          <Link
+            href="/admin/new-offer"
+            className="text-[#FACC15] hover:text-yellow-300 font-medium flex items-center gap-1.5 transition-colors"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Cadastrar Nova Promoção
+          </Link>
+        </div>
+      </div>
+    </footer>
     </div>
   );
 }

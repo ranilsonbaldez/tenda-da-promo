@@ -42,13 +42,14 @@ export function OfferCard({ offer }: OfferCardProps) {
     )}
 
     <div className="relative w-full h-44 mb-3 group-hover:scale-105 transition-transform duration-200">
-      <Image
-        src={offer.image_url}
-        alt={offer.title}
-        fill
-        className="object-contain p-2"
-        sizes="(max-width: 768px) 100vw, 250px"
-      />
+<Image
+  src={offer.image_url}
+  alt={offer.title}
+  fill
+  priority
+  className="object-contain p-2"
+  sizes="(max-width: 768px) 100vw, 250px"
+/>
     </div>
 
     {/* Relógio regressivo visual */}
@@ -80,7 +81,7 @@ export function OfferCard({ offer }: OfferCardProps) {
   )}
 </div>
 
-    <h3 className="font-semibold text-sm line-clamp-2 w-full text-zinc-800 dark:text-zinc-200 mb-2 min-h-[40px]">
+    <h3 className="font-semibold text-sm line-clamp-2 w-full text-zinc-800 dark:text-zinc-200 mb-2 min-h-10">
       {offer.title}
     </h3>
 
