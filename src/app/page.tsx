@@ -19,33 +19,33 @@ export default async function HomePage() {
       
 
 {/* Header Tenda da Promo (Amarelo FACC15) */}
-      <header className="bg-[#FACC15] border-b border-yellow-500/30 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex flex-col select-none">
-            {/* TENDA DA (Roxo / Itálico / Ultra Negrito) */}
-            <div className="font-(family-name:--font-montserrat) italic font-black text-xl md:text-2xl text-[#5B50B1] tracking-normal leading-none">
-              TENDA DA
-            </div>
+<header className="bg-[#FACC15] border-b border-yellow-500/30 sticky top-0 z-50">
+  <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col items-center justify-center text-center">
+    <div className="flex flex-col items-center select-none">
+      {/* TENDA DA (Roxo / Itálico / Ultra Negrito) */}
+      <div className="font-(family-name:--font-montserrat) italic font-black text-xl md:text-2xl text-[#5B50B1] tracking-normal leading-none">
+        TENDA DA
+      </div>
 
-            {/* PR%MO (Vermelho com Selo Central) */}
-            <div className="font-(family-name:--font-montserrat) italic font-black text-3xl md:text-4xl text-[#E52427] flex items-center leading-none mt-0.5 tracking-tight">
-              <span>PR</span>
+      {/* PR%MO (Vermelho com Selo Central) */}
+      <div className="font-(family-name:--font-montserrat) italic font-black text-3xl md:text-4xl text-[#E52427] flex items-center justify-center leading-none mt-0.5 tracking-tight">
+        <span>PR</span>
 
-              {/* Selo de Porcentagem */}
-              <div className="relative mx-0.5 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 bg-[#E52427] text-[#FACC15] rounded-full text-xs md:text-sm font-black not-italic shadow-sm">
-                %
-              </div>
-
-              <span>MO</span>
-            </div>
-
-            {/* Slogan */}
-            <span className="font-(family-name:--font-inter) text-[11px] md:text-xs text-zinc-900 font-semibold tracking-tight mt-1">
-              Quem procura preço baixo, acampa aqui.
-            </span>
-          </div>
+        {/* Selo de Porcentagem */}
+        <div className="relative mx-0.5 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 bg-[#E52427] text-[#FACC15] rounded-full text-xs md:text-sm font-black not-italic shadow-sm">
+          %
         </div>
-      </header>
+
+        <span>MO</span>
+      </div>
+
+      {/* Slogan */}
+      <span className="font-(family-name:--font-inter) text-[11px] md:text-xs text-zinc-900 font-semibold tracking-tight mt-1 text-center">
+        Quem procura preço baixo, acampa aqui.
+      </span>
+    </div>
+  </div>
+</header>
 
       {/* Banner Informativo Fixo (Roxo da Marca) */}
       <div className="bg-[#5B50B1] text-white font-medium py-2 px-4 text-center text-xs md:text-sm shadow-inner">
