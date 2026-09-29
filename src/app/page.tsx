@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { OfferCard } from "@/components/offer-card";
 import { Offer } from "@/types";
-import { Flame, ShoppingBag } from "lucide-react";
 
 // Força a página a buscar dados atualizados do servidor a cada acesso
 export const revalidate = 0;
@@ -17,40 +16,47 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
-      {/* Header Tenda da Promo */}
-      <header className="bg-orange-500 text-white shadow-md sticky top-0 z-50">
+      
+
+{/* Header Tenda da Promo (Amarelo FACC15) */}
+      <header className="bg-[#FACC15] border-b border-yellow-500/30 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-white text-orange-500 p-2 rounded-xl font-black text-xl flex items-center justify-center shadow">
-              <ShoppingBag className="w-6 h-6 stroke-[2.5]" />
+          <div className="flex flex-col select-none">
+            {/* TENDA DA (Roxo / Itálico / Ultra Negrito) */}
+            <div className="font-(family-name:--font-montserrat) italic font-black text-xl md:text-2xl text-[#5B50B1] tracking-normal leading-none">
+              TENDA DA
             </div>
-            <div>
-              <span className="text-2xl font-black tracking-tight block leading-none">
-                TENDA DA PROMO
-              </span>
-              <span className="text-[10px] text-orange-100 font-medium tracking-wide uppercase">
-                Quem procura preço baixo, acampa aqui!
-              </span>
+
+            {/* PR%MO (Vermelho com Selo Central) */}
+            <div className="font-(family-name:--font-montserrat) italic font-black text-3xl md:text-4xl text-[#E52427] flex items-center leading-none mt-0.5 tracking-tight">
+              <span>PR</span>
+
+              {/* Selo de Porcentagem */}
+              <div className="relative mx-0.5 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 bg-[#E52427] text-[#FACC15] rounded-full text-xs md:text-sm font-black not-italic shadow-sm">
+                %
+              </div>
+
+              <span>MO</span>
             </div>
+
+            {/* Slogan */}
+            <span className="font-(family-name:--font-inter) text-[11px] md:text-xs text-zinc-900 font-semibold tracking-tight mt-1">
+              Quem procura preço baixo, acampa aqui.
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Hero Banner */}
-      <section className="bg-zinc-900 text-white py-8 px-4 border-b border-zinc-800">
-        <div className="max-w-7xl mx-auto text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-4xl font-extrabold flex items-center justify-center md:justify-start gap-2">
-              <Flame className="w-8 h-8 text-orange-500 animate-pulse" /> As
-              melhores ofertas da internet só aqui!
-            </h1>
-            <p className="text-zinc-400 mt-2 text-sm md:text-base">
-              Selecionamos os melhores preços e cupons do Mercado Livre, Amazon,
-              Magalu e Shopee em um só lugar.
-            </p>
-          </div>
+      {/* Banner Informativo Fixo (Roxo da Marca) */}
+      <div className="bg-[#5B50B1] text-white font-medium py-2 px-4 text-center text-xs md:text-sm shadow-inner">
+        <div className="max-w-7xl mx-auto">
+          Selecionamos os melhores preços e cupons do{" "}
+          <span className="font-bold text-[#FACC15]">Mercado Livre</span>,{" "}
+          <span className="font-bold text-[#FACC15]">Amazon</span>,{" "}
+          <span className="font-bold text-[#FACC15]">Magalu</span> e{" "}
+          <span className="font-bold text-[#FACC15]">Shopee</span> em um só lugar.
         </div>
-      </section>
+      </div>
 
       {/* Vitrine de Produtos */}
       <main className="max-w-7xl mx-auto px-4 py-8">
