@@ -1,10 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import { OfferCard } from "@/components/offer-card";
 import { Offer } from "@/types";
-// import Link from "next/link";
-// import { PlusCircle } from "lucide-react";
+import { OffersList } from "@/components/offers-list";
 
-// Força a página a buscar dados atualizados do servidor a cada acesso
 export const revalidate = 0;
 
 export default async function HomePage() {
@@ -59,21 +57,9 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Vitrine de Produtos */}
+      {/* Vitrine de Produtos com Filtro e Pesquisa */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {offers && offers.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {offers.map((offer) => (
-              <OfferCard key={offer.id} offer={offer as Offer} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl">
-            <p className="text-zinc-500 font-medium">
-              Nenhuma promoção cadastrada na Tenda no momento.
-            </p>
-          </div>
-        )}
+        <OffersList initialOffers={(offers as Offer[]) || []} />
       </main>
 
       {/* Rodapé simples */}
@@ -83,18 +69,6 @@ export default async function HomePage() {
             © {new Date().getFullYear()} Tenda da Promo. Todos os direitos
             reservados.
           </p>
-
-          {/* Link temporário de administração */}
-          {/* <div className="flex items-center gap-2 bg-zinc-800/80 px-3 py-1.5 rounded-lg border border-zinc-700">
-          <span className="text-xs text-zinc-400 font-mono">[Atalho Temp]</span>
-          <Link
-            href="/admin/new-offer"
-            className="text-[#FACC15] hover:text-yellow-300 font-medium flex items-center gap-1.5 transition-colors"
-          >
-            <PlusCircle className="w-4 h-4" />
-            Cadastrar Nova Promoção
-          </Link>
-        </div> */}
         </div>
       </footer>
     </div>
