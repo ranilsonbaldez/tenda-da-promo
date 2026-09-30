@@ -35,33 +35,30 @@ export function OfferCard({ offer }: OfferCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Define o link direto da oferta (ou usa a URL do site com a rota do produto)
     const shareUrl = `${window.location.origin}/ir/${offer.id}`;
+
+    // Texto limpo sem induzir preview da loja
     const shareText = `🔥 *OFERTA IMPERDÍVEL!*
 
 📌 *${offer.title}*
 ${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}💰 Por apenas: *R$ ${offer.promotional_price.toFixed(2)}*
 
-👉 Garanta o seu no link:`;
+👉 Garanta aqui: ${shareUrl}`;
 
-    // 1. Tenta acionar a API nativa de compartilhamento (WhatsApp, Telegram, Apps móveis)
     if (navigator.share) {
       try {
         await navigator.share({
           title: offer.title,
           text: shareText,
-          url: shareUrl,
         });
         return;
       } catch (err) {
-        // Se o usuário apenas fechou a janela de compartilhamento, ignora o erro
         if ((err as Error).name === "AbortError") return;
       }
     }
 
-    // 2. Fallback caso o navegador desktop não suporte navigator.share
     try {
-      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      await navigator.clipboard.writeText(shareText);
       setShared(true);
       setTimeout(() => setShared(false), 2500);
     } catch (err) {
