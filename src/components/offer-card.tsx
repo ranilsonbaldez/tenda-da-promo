@@ -38,7 +38,7 @@ export function OfferCard({ offer }: OfferCardProps) {
     const shareUrl = `${window.location.origin}/ir/${offer.id}`;
 
     // Texto limpo sem induzir preview da loja
-    const shareText = `🔥 *OFERTA IMPERDÍVEL!*
+    const shareText = `🔥 *OFERTAA IMPERDÍVEL!*
 
 📌 *${offer.title}*
 ${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}💰 Por apenas: *R$ ${offer.promotional_price.toFixed(2)}*

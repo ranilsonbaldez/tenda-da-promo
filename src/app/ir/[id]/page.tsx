@@ -1,11 +1,11 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
+// 1. O WhatsApp lê esta função e obtém a imagem, título e preço
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
@@ -23,10 +23,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `🔥 ${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
   const description = offer.coupon_code
-    ? `Utilize o cupom ${offer.coupon_code} para garantir esta oferta na Tenda da Promo!`
-    : `Aproveite o menor preço na Tenda da Promo. Clique para conferir!`;
+    ? `Aproveite com o cupom ${offer.coupon_code} na Tenda da Promo!`
+    : `Aproveite o menor preço na Tenda da Promo. Clique e confira!`;
 
-  // Garante que a URL da imagem utiliza o protocolo https
   const imageUrl = offer.image_url?.startsWith("http://")
     ? offer.image_url.replace("http://", "https://")
     : offer.image_url;
@@ -43,8 +42,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         {
           url: imageUrl,
           secureUrl: imageUrl,
-          width: 600,
-          height: 600,
+          width: 800,
+          height: 800,
           alt: offer.title,
         },
       ],
@@ -59,6 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+// 2. Renderiza o HTML com as metatags e redireciona o utilizador no navegador
 export default async function RedirectPage({ params }: Props) {
   const { id } = await params;
 
@@ -68,9 +68,22 @@ export default async function RedirectPage({ params }: Props) {
     .eq("id", id)
     .single();
 
-  if (offer?.affiliate_url) {
-    redirect(offer.affiliate_url);
-  }
+  const destination = offer?.affiliate_url || "/";
 
-  redirect("/");
+  return (
+    <html>
+      <head>
+        {/* Redirecionamento instantâneo via Meta Refresh no navegador */}
+        <meta httpEquiv="refresh" content={`0;url=${destination}`} />
+      </head>
+      <body>
+        {/* Fallback de redirecionamento via JS caso o meta refresh seja ignorado */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.location.href = "${destination}";`,
+          }}
+        />
+      </body>
+    </html>
+  );
 }
