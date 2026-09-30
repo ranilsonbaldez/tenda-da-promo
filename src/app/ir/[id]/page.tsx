@@ -10,7 +10,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// 1. WhatsApp / Telegram lê esta função para montar o card com foto e título
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
@@ -23,13 +22,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!offer) {
     return {
       title: "Tenda da Promo | Oferta Especial",
-      description: "Confira as melhores ofertas na Tenda da Promo!",
     };
   }
 
   const title = `🔥 ${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
   const description = offer.coupon_code
-    ? `Utilize o cupom ${offer.coupon_code} para garantir esta oferta na Tenda da Promo!`
+    ? `Utilize o cupom ${offer.coupon_code} para garantir esta oferta!`
     : `Aproveite o menor preço na Tenda da Promo. Clique e confira!`;
 
   const imageUrl = offer.image_url?.startsWith("http://")
@@ -64,18 +62,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// 2. Redirecionamento HTTP nativo do Next.js no servidor
 export default async function RedirectPage({ params }: Props) {
   const { id } = await params;
 
+  // Selecionando a coluna correta no banco: affiliate_link
   const { data: offer } = await supabase
     .from("offers")
-    .select("affiliate_url")
+    .select("affiliate_link") // ✅ Nome correto da coluna
     .eq("id", id)
     .maybeSingle();
 
-  if (offer?.affiliate_url) {
-    redirect(offer.affiliate_url);
+  if (offer?.affiliate_link) {
+    redirect(offer.affiliate_link);
   }
 
   redirect("/");
