@@ -3,12 +3,12 @@ import { redirect } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-// 1. O WhatsApp lê esta função para montar o preview limpo
+// 1. O WhatsApp lê esta função para montar o preview dinâmico do produto
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = params;
+  const { id } = await params;
 
   const { data: offer } = await supabase
     .from("offers")
@@ -22,10 +22,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `🔥 ${offer.title}`;
+  const title = `${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
   const description = offer.coupon_code
-    ? `Por R$ ${Number(offer.promotional_price).toFixed(2)} com o cupom ${offer.coupon_code}`
-    : `Por apenas R$ ${Number(offer.promotional_price).toFixed(2)} na Tenda da Promo!`;
+    ? `Cupom exclusivo: ${offer.coupon_code}. Aproveite essa promoção na Tenda da Promo!`
+    : `Garanta com o menor preço na Tenda da Promo. Clique e confira!`;
 
   return {
     title,
@@ -33,14 +33,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      images: [{ url: offer.image_url }],
+      siteName: "Tenda da Promo",
+      images: [
+        {
+          url: offer.image_url,
+          width: 800,
+          height: 800,
+          alt: offer.title,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [offer.image_url],
     },
   };
 }
 
 // 2. Redireciona o usuário para o link de afiliado assim que o link é aberto
 export default async function RedirectPage({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
 
   const { data: offer } = await supabase
     .from("offers")
