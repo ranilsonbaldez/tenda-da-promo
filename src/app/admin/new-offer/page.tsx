@@ -20,6 +20,10 @@ import {
   Store as StoreIcon,
   ShoppingBag,
   RotateCcw,
+  Pencil,
+  Trash2,
+  ListOrdered,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -28,15 +32,38 @@ interface Store {
   name: string;
 }
 
+interface Offer {
+  id: string;
+  title: string;
+  slug: string;
+  image_url: string;
+  affiliate_link: string;
+  original_price: number | null;
+  promotional_price: number;
+  coupon_code: string | null;
+  store_id: string;
+  expires_at: string | null;
+  is_featured: boolean;
+  created_at?: string;
+  stores?: { name: string } | null;
+}
+
 export default function NewOfferPage() {
-  // Estado do componente
+  // Estados gerais
   const [stores, setStores] = useState<Store[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoadingStores, setIsLoadingStores] = useState(true);
+  const [isLoadingOffers, setIsLoadingOffers] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Estado dos campos do formulário
+  // Estado do item em edição (null = criando novo)
+  const [editingOfferId, setEditingOfferId] = useState<string | null>(null);
+
+  // Campos do formulário
   const [title, setTitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [affiliateLink, setAffiliateLink] = useState("");
@@ -47,36 +74,83 @@ export default function NewOfferPage() {
   const [expiresAt, setExpiresAt] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
 
-  // Buscar lojas disponíveis ao montar
+  // Carregar dados iniciais na montagem do componente
   useEffect(() => {
-    async function fetchStores() {
+    let isMounted = true;
+
+    async function loadInitialData() {
+      // 1. Carregar Lojas
       try {
-        const { data, error } = await supabase
+        const { data: storesData, error: storesError } = await supabase
           .from("stores")
           .select("id, name")
           .order("name", { ascending: true });
 
-        if (error) {
-          console.error("Erro ao carregar lojas:", error.message);
-        } else if (data) {
-          setStores(data);
-          if (data.length > 0) {
-            setStoreId(data[0].id);
+        if (isMounted) {
+          if (storesError) {
+            console.error("Erro ao carregar lojas:", storesError.message);
+          } else if (storesData) {
+            setStores(storesData);
+            if (storesData.length > 0) {
+              setStoreId((prev) => (prev ? prev : storesData[0].id));
+            }
           }
         }
       } catch (err) {
         console.error("Erro inesperado ao carregar lojas:", err);
       } finally {
-        setIsLoadingStores(false);
+        if (isMounted) setIsLoadingStores(false);
+      }
+
+      // 2. Carregar Ofertas
+      try {
+        const { data: offersData, error: offersError } = await supabase
+          .from("offers")
+          .select("*, stores(name)")
+          .order("created_at", { ascending: false });
+
+        if (isMounted) {
+          if (offersError) {
+            console.error("Erro ao carregar ofertas:", offersError.message);
+          } else if (offersData) {
+            setOffers(offersData as Offer[]);
+          }
+        }
+      } catch (err) {
+        console.error("Erro inesperado ao carregar ofertas:", err);
+      } finally {
+        if (isMounted) setIsLoadingOffers(false);
       }
     }
 
-    fetchStores();
+    loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Helper para slug
+  // Função auxiliar para recarregar a lista de ofertas após salvar ou editar
+  async function reloadOffers() {
+    setIsLoadingOffers(true);
+    try {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("*, stores(name)")
+        .order("created_at", { ascending: false });
+
+      if (error) console.error("Erro ao carregar ofertas:", error.message);
+      else if (data) setOffers(data as Offer[]);
+    } catch (err) {
+      console.error("Erro ao recarregar ofertas:", err);
+    } finally {
+      setIsLoadingOffers(false);
+    }
+  }
+
+  // Helper para Slug Único
   function createSlug(text: string): string {
-    return text
+    const baseSlug = text
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -84,10 +158,25 @@ export default function NewOfferPage() {
       .replace(/\s+/g, "-")
       .replace(/--+/g, "-")
       .trim();
+
+    const uniqueHash = Math.random().toString(36).substring(2, 6);
+    return `${baseSlug}-${uniqueHash}`;
   }
 
-  // Limpar formulário para novo cadastro sem recarregar
+  // Helper para converter valores numéricos
+  function parsePrice(val: string): number | null {
+    if (!val) return null;
+    let cleaned = val.trim();
+    if (cleaned.includes(",")) {
+      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+    }
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? null : parsed;
+  }
+
+  // Resetar formulário
   function resetForm() {
+    setEditingOfferId(null);
     setTitle("");
     setImageUrl("");
     setAffiliateLink("");
@@ -99,7 +188,41 @@ export default function NewOfferPage() {
     setErrorMessage("");
   }
 
-  // Processar submissão
+  // Preencher formulário para edição
+  function handleStartEdit(offer: Offer) {
+    setEditingOfferId(offer.id);
+    setTitle(offer.title);
+    setImageUrl(offer.image_url);
+    setAffiliateLink(offer.affiliate_link);
+    setOriginalPrice(offer.original_price ? String(offer.original_price) : "");
+    setPromotionalPrice(String(offer.promotional_price));
+    setCouponCode(offer.coupon_code || "");
+    setStoreId(offer.store_id);
+    setExpiresAt(offer.expires_at ? offer.expires_at.slice(0, 16) : "");
+    setIsFeatured(offer.is_featured);
+    setErrorMessage("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Deletar oferta
+  async function handleDeleteOffer(id: string) {
+    if (!confirm("Tem certeza de que deseja apagar esta oferta?")) return;
+
+    setDeletingId(id);
+    try {
+      const { error } = await supabase.from("offers").delete().eq("id", id);
+      if (error) throw error;
+
+      setOffers((prev) => prev.filter((item) => item.id !== id));
+      if (editingOfferId === id) resetForm();
+    } catch (err: unknown) {
+      alert("Erro ao excluir oferta: " + (err instanceof Error ? err.message : "Erro desconhecido"));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  // Envio (Criar ou Atualizar)
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsSubmitting(true);
@@ -107,17 +230,10 @@ export default function NewOfferPage() {
     setIsSuccess(false);
 
     try {
-      const parsePrice = (val: string) => {
-        if (!val) return null;
-        const normalized = val.replace(",", ".");
-        const parsed = parseFloat(normalized);
-        return isNaN(parsed) ? null : parsed;
-      };
-
       const parsedOriginal = parsePrice(originalPrice);
       const parsedPromotional = parsePrice(promotionalPrice);
 
-      if (parsedPromotional === null) {
+      if (parsedPromotional === null || parsedPromotional <= 0) {
         throw new Error("Por favor, insira um preço promocional válido.");
       }
 
@@ -127,7 +243,6 @@ export default function NewOfferPage() {
 
       const payload = {
         title: title.trim(),
-        slug: createSlug(title),
         image_url: imageUrl.trim(),
         affiliate_link: affiliateLink.trim(),
         original_price: parsedOriginal,
@@ -138,27 +253,37 @@ export default function NewOfferPage() {
         is_featured: isFeatured,
       };
 
-      const { error } = await supabase.from("offers").insert([payload]);
+      if (editingOfferId) {
+        // Atualização
+        const { error } = await supabase
+          .from("offers")
+          .update(payload)
+          .eq("id", editingOfferId);
 
-      if (error) {
-        console.error("Erro do Supabase:", error);
-        throw new Error(error.message || "Erro ao guardar no banco de dados.");
+        if (error) throw new Error(error.message);
+        setSuccessMessage("Oferta atualizada com sucesso!");
+      } else {
+        // Criação
+        const { error } = await supabase.from("offers").insert([
+          {
+            ...payload,
+            slug: createSlug(title),
+          },
+        ]);
+
+        if (error) throw new Error(error.message);
+        setSuccessMessage("Oferta cadastrada com sucesso!");
       }
 
       setIsSuccess(true);
       resetForm();
+      await reloadOffers();
 
-      // Ocultar mensagem de sucesso após 3 segundos
-      setTimeout(() => {
-        setIsSuccess(false);
-      }, 3000);
+      setTimeout(() => setIsSuccess(false), 4000);
     } catch (err: unknown) {
-      console.error("Erro na submissão:", err);
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Ocorreu um erro ao cadastrar a promoção.";
-      setErrorMessage(message);
+      setErrorMessage(
+        err instanceof Error ? err.message : "Ocorreu um erro ao salvar a promoção."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -166,8 +291,8 @@ export default function NewOfferPage() {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 px-3 py-4 md:p-8">
-      <div className="max-w-2xl mx-auto space-y-4">
-        {/* Navegação e Atalhos Rápidos */}
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Navegação e Atalhos */}
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -183,33 +308,44 @@ export default function NewOfferPage() {
             onClick={resetForm}
             className="text-xs text-zinc-500 hover:text-zinc-800 flex items-center gap-1"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Limpar Campos
+            <RotateCcw className="w-3.5 h-3.5" /> Limpar / Cancelar
           </Button>
         </div>
 
+        {/* Form Card */}
         <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
-          {/* Cabeçalho Limpo */}
           <CardHeader className="bg-[#000000] text-white px-5 py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <PlusCircle className="w-5 h-5 text-[#FACC15]" />
-              Nova Oferta
+              {editingOfferId ? (
+                <>
+                  <Pencil className="w-5 h-5 text-amber-400" /> Editar Oferta
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="w-5 h-5 text-[#FACC15]" /> Nova Oferta
+                </>
+              )}
             </CardTitle>
-            <span className="text-xs bg-white/10 text-white/80 px-2.5 py-1 rounded-full font-mono">
-              Cadastro Rápido
-            </span>
+            {editingOfferId && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={resetForm}
+                className="h-7 text-xs flex items-center gap-1"
+              >
+                <XCircle className="w-3.5 h-3.5" /> Cancelar Edição
+              </Button>
+            )}
           </CardHeader>
 
           <CardContent className="p-4 md:p-6 space-y-5">
             {isSuccess && (
-              <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-lg flex items-center justify-between gap-3 text-sm animate-in fade-in">
+              <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-lg flex items-center justify-between gap-3 text-sm">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <span className="font-medium">Oferta cadastrada com sucesso!</span>
+                  <span className="font-medium">{successMessage}</span>
                 </div>
-                <Link
-                  href="/"
-                  className="text-xs underline font-bold hover:text-emerald-900"
-                >
+                <Link href="/" className="text-xs underline font-bold hover:text-emerald-900">
                   Ver na Vitrine →
                 </Link>
               </div>
@@ -222,13 +358,10 @@ export default function NewOfferPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Seção 1: Título e Loja */}
+              {/* Título, Loja e Cupom */}
               <div className="space-y-3">
                 <div>
-                  <Label
-                    htmlFor="title"
-                    className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
-                  >
+                  <Label htmlFor="title" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
                     <ShoppingBag className="w-3.5 h-3.5 text-[#5B50B1]" /> Título do Produto *
                   </Label>
                   <Input
@@ -243,10 +376,7 @@ export default function NewOfferPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label
-                      htmlFor="store"
-                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
-                    >
+                    <Label htmlFor="store" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
                       <StoreIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> Loja / Plataforma *
                     </Label>
                     {isLoadingStores ? (
@@ -271,10 +401,7 @@ export default function NewOfferPage() {
                   </div>
 
                   <div>
-                    <Label
-                      htmlFor="coupon"
-                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
-                    >
+                    <Label htmlFor="coupon" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
                       <Tag className="w-3.5 h-3.5 text-[#5B50B1]" /> Cupom (Opcional)
                     </Label>
                     <Input
@@ -288,20 +415,16 @@ export default function NewOfferPage() {
                 </div>
               </div>
 
-              {/* Seção 2: Links e Pré-visualização de Imagem */}
+              {/* URLs */}
               <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label
-                      htmlFor="imageUrl"
-                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
-                    >
-                      <ImageIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> URL da Imagem *
+                    <Label htmlFor="imageUrl" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                      <ImageIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> URL da Imagem (Opcional)
                     </Label>
                     <Input
                       id="imageUrl"
                       type="url"
-                      required
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
                       className="h-10 font-mono text-xs"
@@ -309,10 +432,7 @@ export default function NewOfferPage() {
                   </div>
 
                   <div>
-                    <Label
-                      htmlFor="affiliateLink"
-                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
-                    >
+                    <Label htmlFor="affiliateLink" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
                       <Link2 className="w-3.5 h-3.5 text-[#5B50B1]" /> Link de Afiliado *
                     </Label>
                     <Input
@@ -326,7 +446,6 @@ export default function NewOfferPage() {
                   </div>
                 </div>
 
-                {/* Preview Rápido da Imagem ao colar a URL */}
                 {imageUrl.trim().length > 10 && (
                   <div className="p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-700 flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded border overflow-hidden relative shrink-0 flex items-center justify-center">
@@ -341,20 +460,17 @@ export default function NewOfferPage() {
                       />
                     </div>
                     <span className="text-xs text-zinc-500 truncate">
-                      Miniatura de confirmação da imagem
+                      Miniatura de confirmação
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Seção 3: Preços e Destaque */}
+              {/* Preços e Expiração */}
               <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label
-                      htmlFor="originalPrice"
-                      className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1 mb-1"
-                    >
+                    <Label htmlFor="originalPrice" className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1 mb-1">
                       <DollarSign className="w-3.5 h-3.5" /> Preço original
                     </Label>
                     <Input
@@ -368,10 +484,7 @@ export default function NewOfferPage() {
                   </div>
 
                   <div>
-                    <Label
-                      htmlFor="promotionalPrice"
-                      className="text-xs font-bold text-[#E52427] uppercase tracking-wider flex items-center gap-1 mb-1"
-                    >
+                    <Label htmlFor="promotionalPrice" className="text-xs font-bold text-[#E52427] uppercase tracking-wider flex items-center gap-1 mb-1">
                       <DollarSign className="w-3.5 h-3.5" /> Preço promocional
                     </Label>
                     <Input
@@ -388,10 +501,7 @@ export default function NewOfferPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center pt-1">
                   <div>
-                    <Label
-                      htmlFor="expiresAt"
-                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
-                    >
+                    <Label htmlFor="expiresAt" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
                       <Calendar className="w-3.5 h-3.5 text-[#5B50B1]" /> Expiração (Opcional)
                     </Label>
                     <Input
@@ -404,10 +514,7 @@ export default function NewOfferPage() {
                   </div>
 
                   <div className="pt-2 md:pt-5">
-                    <label
-                      htmlFor="isFeatured"
-                      className="flex items-center gap-2.5 p-2 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 cursor-pointer select-none"
-                    >
+                    <label htmlFor="isFeatured" className="flex items-center gap-2.5 p-2 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         id="isFeatured"
@@ -424,24 +531,121 @@ export default function NewOfferPage() {
                 </div>
               </div>
 
-              {/* Botão de Envio de Alto Impacto */}
+              {/* Botão de Envio */}
               <div className="pt-3">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-[#028850] hover:bg-[#00683d] text-white font-bold h-12 text-base rounded-lg shadow-md transition-all active:scale-[0.99]"
+                  disabled={isSubmitting || isLoadingStores}
+                  className={`w-full font-bold h-12 text-base rounded-lg shadow-md transition-all active:scale-[0.99] ${
+                    editingOfferId
+                      ? "bg-amber-600 hover:bg-amber-700 text-white"
+                      : "bg-[#028850] hover:bg-[#00683d] text-white"
+                  }`}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                      Guardando Oferta...
+                      {editingOfferId ? "Atualizando..." : "Guardando Oferta..."}
                     </>
+                  ) : editingOfferId ? (
+                    "Salvar Alterações"
                   ) : (
                     "Cadastrar Oferta"
                   )}
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Gerenciamento de Ofertas */}
+        <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+          <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 px-5 py-4">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
+              <ListOrdered className="w-5 h-5 text-[#5B50B1]" /> Ofertas Cadastradas ({offers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLoadingOffers ? (
+              <div className="p-8 text-center text-zinc-500 flex items-center justify-center gap-2 text-sm">
+                <Loader2 className="w-4 h-4 animate-spin" /> Carregando lista de ofertas...
+              </div>
+            ) : offers.length === 0 ? (
+              <div className="p-8 text-center text-zinc-500 text-sm">
+                Nenhuma oferta cadastrada até o momento.
+              </div>
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {offers.map((offer) => (
+                  <div
+                    key={offer.id}
+                    className="p-4 flex items-center justify-between gap-3 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 bg-white rounded border overflow-hidden shrink-0 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={offer.image_url}
+                          alt={offer.title}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                          {offer.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
+                          <span className="font-bold text-[#E52427]">
+                            R$ {offer.promotional_price.toFixed(2).replace(".", ",")}
+                          </span>
+                          {offer.stores?.name && (
+                            <>
+                              <span>•</span>
+                              <span>{offer.stores.name}</span>
+                            </>
+                          )}
+                          {offer.is_featured && (
+                            <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                              <Flame className="w-3 h-3 text-[#E52427] fill-[#E52427]" /> Destaque
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStartEdit(offer)}
+                        className="h-8 px-2.5 text-xs flex items-center gap-1 border-zinc-300 dark:border-zinc-700"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-amber-600" /> Editar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        disabled={deletingId === offer.id}
+                        onClick={() => handleDeleteOffer(offer.id)}
+                        className="h-8 px-2.5 text-xs flex items-center gap-1"
+                      >
+                        {deletingId === offer.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                        Apagar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
