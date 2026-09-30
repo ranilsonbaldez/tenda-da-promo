@@ -37,7 +37,12 @@ export function OfferCard({ offer }: OfferCardProps) {
 
     // Define o link direto da oferta (ou usa a URL do site com a rota do produto)
     const shareUrl = `${window.location.origin}/ir/${offer.id}`;
-    const shareText = `Olha essa oferta na Tenda da Promo: ${offer.title} por apenas R$ ${offer.promotional_price.toFixed(2)}!`;
+    const shareText = `🔥 *OFERTA IMPERDÍVEL!*
+
+📌 *${offer.title}*
+${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}💰 Por apenas: *R$ ${offer.promotional_price.toFixed(2)}*
+
+👉 Garanta o seu no link:`;
 
     // 1. Tenta acionar a API nativa de compartilhamento (WhatsApp, Telegram, Apps móveis)
     if (navigator.share) {
