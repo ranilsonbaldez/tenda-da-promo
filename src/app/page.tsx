@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { OfferCard } from "@/components/offer-card";
 import { Offer } from "@/types";
 import { OffersList } from "@/components/offers-list";
 
