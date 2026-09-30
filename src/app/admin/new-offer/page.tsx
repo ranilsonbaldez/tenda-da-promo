@@ -216,7 +216,10 @@ export default function NewOfferPage() {
       setOffers((prev) => prev.filter((item) => item.id !== id));
       if (editingOfferId === id) resetForm();
     } catch (err: unknown) {
-      alert("Erro ao excluir oferta: " + (err instanceof Error ? err.message : "Erro desconhecido"));
+      alert(
+        "Erro ao excluir oferta: " +
+          (err instanceof Error ? err.message : "Erro desconhecido"),
+      );
     } finally {
       setDeletingId(null);
     }
@@ -282,7 +285,9 @@ export default function NewOfferPage() {
       setTimeout(() => setIsSuccess(false), 4000);
     } catch (err: unknown) {
       setErrorMessage(
-        err instanceof Error ? err.message : "Ocorreu um erro ao salvar a promoção."
+        err instanceof Error
+          ? err.message
+          : "Ocorreu um erro ao salvar a promoção.",
       );
     } finally {
       setIsSubmitting(false);
@@ -345,7 +350,10 @@ export default function NewOfferPage() {
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   <span className="font-medium">{successMessage}</span>
                 </div>
-                <Link href="/" className="text-xs underline font-bold hover:text-emerald-900">
+                <Link
+                  href="/"
+                  className="text-xs underline font-bold hover:text-emerald-900"
+                >
                   Ver na Vitrine →
                 </Link>
               </div>
@@ -361,8 +369,12 @@ export default function NewOfferPage() {
               {/* Título, Loja e Cupom */}
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="title" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                    <ShoppingBag className="w-3.5 h-3.5 text-[#5B50B1]" /> Título do Produto *
+                  <Label
+                    htmlFor="title"
+                    className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 text-[#5B50B1]" />{" "}
+                    Título do Produto *
                   </Label>
                   <Input
                     id="title"
@@ -376,12 +388,17 @@ export default function NewOfferPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="store" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                      <StoreIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> Loja / Plataforma *
+                    <Label
+                      htmlFor="store"
+                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
+                    >
+                      <StoreIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> Loja
+                      / Plataforma *
                     </Label>
                     {isLoadingStores ? (
                       <div className="text-xs text-zinc-500 h-10 flex items-center">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> Carregando lojas...
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{" "}
+                        Carregando lojas...
                       </div>
                     ) : (
                       <select
@@ -401,8 +418,12 @@ export default function NewOfferPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="coupon" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                      <Tag className="w-3.5 h-3.5 text-[#5B50B1]" /> Cupom (Opcional)
+                    <Label
+                      htmlFor="coupon"
+                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
+                    >
+                      <Tag className="w-3.5 h-3.5 text-[#5B50B1]" /> Cupom
+                      (Opcional)
                     </Label>
                     <Input
                       id="coupon"
@@ -419,8 +440,12 @@ export default function NewOfferPage() {
               <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="imageUrl" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                      <ImageIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> URL da Imagem (Opcional)
+                    <Label
+                      htmlFor="imageUrl"
+                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> URL
+                      da Imagem (Opcional)
                     </Label>
                     <Input
                       id="imageUrl"
@@ -432,8 +457,12 @@ export default function NewOfferPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="affiliateLink" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                      <Link2 className="w-3.5 h-3.5 text-[#5B50B1]" /> Link de Afiliado *
+                    <Label
+                      htmlFor="affiliateLink"
+                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
+                    >
+                      <Link2 className="w-3.5 h-3.5 text-[#5B50B1]" /> Link de
+                      Afiliado *
                     </Label>
                     <Input
                       id="affiliateLink"
@@ -470,7 +499,10 @@ export default function NewOfferPage() {
               <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="originalPrice" className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1 mb-1">
+                    <Label
+                      htmlFor="originalPrice"
+                      className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1 mb-1"
+                    >
                       <DollarSign className="w-3.5 h-3.5" /> Preço original
                     </Label>
                     <Input
@@ -484,7 +516,10 @@ export default function NewOfferPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="promotionalPrice" className="text-xs font-bold text-[#E52427] uppercase tracking-wider flex items-center gap-1 mb-1">
+                    <Label
+                      htmlFor="promotionalPrice"
+                      className="text-xs font-bold text-[#E52427] uppercase tracking-wider flex items-center gap-1 mb-1"
+                    >
                       <DollarSign className="w-3.5 h-3.5" /> Preço promocional
                     </Label>
                     <Input
@@ -501,8 +536,12 @@ export default function NewOfferPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center pt-1">
                   <div>
-                    <Label htmlFor="expiresAt" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#5B50B1]" /> Expiração (Opcional)
+                    <Label
+                      htmlFor="expiresAt"
+                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
+                    >
+                      <Calendar className="w-3.5 h-3.5 text-[#5B50B1]" />{" "}
+                      Expiração (Opcional)
                     </Label>
                     <Input
                       id="expiresAt"
@@ -514,7 +553,10 @@ export default function NewOfferPage() {
                   </div>
 
                   <div className="pt-2 md:pt-5">
-                    <label htmlFor="isFeatured" className="flex items-center gap-2.5 p-2 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 cursor-pointer select-none">
+                    <label
+                      htmlFor="isFeatured"
+                      className="flex items-center gap-2.5 p-2 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 cursor-pointer select-none"
+                    >
                       <input
                         type="checkbox"
                         id="isFeatured"
@@ -545,7 +587,9 @@ export default function NewOfferPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                      {editingOfferId ? "Atualizando..." : "Guardando Oferta..."}
+                      {editingOfferId
+                        ? "Atualizando..."
+                        : "Guardando Oferta..."}
                     </>
                   ) : editingOfferId ? (
                     "Salvar Alterações"
@@ -562,13 +606,15 @@ export default function NewOfferPage() {
         <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
           <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 px-5 py-4">
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
-              <ListOrdered className="w-5 h-5 text-[#5B50B1]" /> Ofertas Cadastradas ({offers.length})
+              <ListOrdered className="w-5 h-5 text-[#5B50B1]" /> Ofertas
+              Cadastradas ({offers.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {isLoadingOffers ? (
               <div className="p-8 text-center text-zinc-500 flex items-center justify-center gap-2 text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" /> Carregando lista de ofertas...
+                <Loader2 className="w-4 h-4 animate-spin" /> Carregando lista de
+                ofertas...
               </div>
             ) : offers.length === 0 ? (
               <div className="p-8 text-center text-zinc-500 text-sm">
@@ -589,7 +635,8 @@ export default function NewOfferPage() {
                           alt={offer.title}
                           className="w-full h-full object-contain"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
                           }}
                         />
                       </div>
@@ -599,19 +646,17 @@ export default function NewOfferPage() {
                         </p>
                         <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
                           <span className="font-bold text-[#E52427]">
-                            R$ {offer.promotional_price.toFixed(2).replace(".", ",")}
+                            R${" "}
+                            {offer.promotional_price
+                              .toFixed(2)
+                              .replace(".", ",")}
                           </span>
-                          {offer.stores?.name && (
+                          {/* {offer.stores?.name && (
                             <>
                               <span>•</span>
                               <span>{offer.stores.name}</span>
                             </>
-                          )}
-                          {offer.is_featured && (
-                            <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                              <Flame className="w-3 h-3 text-[#E52427] fill-[#E52427]" /> Destaque
-                            </span>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </div>
