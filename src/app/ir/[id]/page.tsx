@@ -6,7 +6,6 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-// 1. O WhatsApp lê esta função para montar o preview dinâmico do produto
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
@@ -22,10 +21,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
+  const title = `🔥 ${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
   const description = offer.coupon_code
-    ? `Cupom exclusivo: ${offer.coupon_code}. Aproveite essa promoção na Tenda da Promo!`
-    : `Garanta com o menor preço na Tenda da Promo. Clique e confira!`;
+    ? `Utilize o cupom ${offer.coupon_code} para garantir esta oferta na Tenda da Promo!`
+    : `Aproveite o menor preço na Tenda da Promo. Clique para conferir!`;
+
+  // Garante que a URL da imagem utiliza o protocolo https
+  const imageUrl = offer.image_url?.startsWith("http://")
+    ? offer.image_url.replace("http://", "https://")
+    : offer.image_url;
 
   return {
     title,
@@ -33,12 +37,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
+      url: `https://tenda-da-promo.vercel.app/ir/${id}`,
       siteName: "Tenda da Promo",
       images: [
         {
-          url: offer.image_url,
-          width: 800,
-          height: 800,
+          url: imageUrl,
+          secureUrl: imageUrl,
+          width: 600,
+          height: 600,
           alt: offer.title,
         },
       ],
@@ -48,12 +54,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
-      images: [offer.image_url],
+      images: [imageUrl],
     },
   };
 }
 
-// 2. Redireciona o usuário para o link de afiliado assim que o link é aberto
 export default async function RedirectPage({ params }: Props) {
   const { id } = await params;
 
