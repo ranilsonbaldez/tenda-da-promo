@@ -1,6 +1,6 @@
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import RedirectClient from "./redirect-client";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -10,7 +10,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// 1. WhatsApp / Telegram lê esta função para montar o preview
+// 1. WhatsApp / Telegram lê esta função para montar o card com foto e título
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
@@ -64,22 +64,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// 2. Componente de Servidor que busca o link correto do banco
+// 2. Redirecionamento HTTP nativo do Next.js no servidor
 export default async function RedirectPage({ params }: Props) {
   const { id } = await params;
 
-  const { data: offer, error } = await supabase
+  const { data: offer } = await supabase
     .from("offers")
     .select("affiliate_url")
     .eq("id", id)
     .maybeSingle();
 
-  if (error) {
-    console.error("Erro Supabase:", error.message);
+  if (offer?.affiliate_url) {
+    redirect(offer.affiliate_url);
   }
 
-  // Se não encontrar o link no banco local/prod, redireciona para a raiz
-  const destination = offer?.affiliate_url || "/";
-
-  return <RedirectClient destination={destination} />;
+  redirect("/");
 }
