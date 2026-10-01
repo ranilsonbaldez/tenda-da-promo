@@ -25,17 +25,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Texto curto em caixa alta para a base do card
-  const title = offer.title.toUpperCase();
+  // const title = offer.title.toUpperCase();
 
   const imageUrl = offer.image_url?.startsWith("http://")
     ? offer.image_url.replace("http://", "https://")
     : offer.image_url;
 
   return {
-    title,
+    title: "",
     description: "", // Mantém vazio para não exibir o segundo bloco de texto
     openGraph: {
-      title,
+      title: "",
       description: "",
       url: `https://tenda-da-promo.vercel.app/ir/${id}`,
       siteName: "tenda-da-promo.vercel.app",
