@@ -25,7 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `🔥 ${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
+  // const title = `🔥 ${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
+  const title = `🔥 OLHA ESSA PROMOÇÃO INCRÍVEL!`;
   const description = offer.coupon_code
     ? `Utilize o cupom ${offer.coupon_code} para garantir esta oferta na Tenda da Promo!`
     : `Aproveite o menor preço na Tenda da Promo. Clique e confira!`;

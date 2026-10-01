@@ -36,14 +36,24 @@ export function OfferCard({ offer }: OfferCardProps) {
     e.stopPropagation();
 
     const shareUrl = `${window.location.origin}/ir/${offer.id}`;
+    const siteUrl = "https://tenda-da-promo.vercel.app";
 
     // Texto limpo sem induzir preview da loja
-    const shareText = `🔥 *OFERTAA IMPERDÍVEL!*
+    const shareText = `🔥 *OFERTA IMPERDÍVEL!*
 
 📌 *${offer.title}*
-${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}💰 Por apenas: *R$ ${offer.promotional_price.toFixed(2)}*
+${
+  offer.original_price && offer.original_price > offer.promotional_price
+    ? `🔥 DE ~R$ ${Number(offer.original_price).toFixed(2).replace(".", ",")}~ | POR *R$ ${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
+    : `💰 Por apenas: *R$ ${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
+}${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}
 
-👉 Garanta aqui: ${shareUrl}`;
+
+👉 Garanta aqui: ${shareUrl}
+
+---
+🌐 *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*
+${siteUrl}`;
 
     if (navigator.share) {
       try {
