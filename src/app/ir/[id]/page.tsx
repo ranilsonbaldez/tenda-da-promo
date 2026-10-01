@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!offer) {
     return {
-      title: "TENDA DA PROMO",
+      title: "tenda-da-promo.vercel.app",
     };
   }
 
@@ -28,11 +28,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? offer.image_url.replace("http://", "https://")
     : offer.image_url;
 
+  // Usa caractere invisível para forçar o WhatsApp a ocultar a linha do título
+  const invisibleText = "\u200B";
+
   return {
-    title: "",
-    description: "", // Mantém vazio para não exibir o segundo bloco de texto
+    title: invisibleText,
+    description: "",
     openGraph: {
-      title: "",
+      title: invisibleText,
       description: "",
       url: `https://tenda-da-promo.vercel.app/ir/${id}`,
       siteName: "tenda-da-promo.vercel.app",
@@ -40,8 +43,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         {
           url: imageUrl,
           secureUrl: imageUrl,
-          width: 800,
-          height: 800,
+          width: 1200,
+          height: 630,
           alt: offer.title,
         },
       ],
@@ -49,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: " ",
+      title: invisibleText,
       description: "",
       images: [imageUrl],
     },
