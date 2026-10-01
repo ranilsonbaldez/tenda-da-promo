@@ -48,11 +48,10 @@ ${
     : `💰 Por apenas: *R$ ${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
 }${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}
 
-
 👉 Garanta aqui: ${shareUrl}
 
 ---
-🌐 *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*
+⛺ *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*
 ${siteUrl}`;
 
     if (navigator.share) {

@@ -36,11 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : offer.image_url;
 
   return {
-    title,
-    description,
+    // title,
+    // description,
     openGraph: {
-      title,
-      description,
+      // title,
+      // description,
       url: `https://tenda-da-promo.vercel.app/ir/${id}`,
       siteName: "Tenda da Promo",
       images: [
