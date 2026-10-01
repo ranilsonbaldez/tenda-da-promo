@@ -14,35 +14,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data: offer } = await supabase
     .from("offers")
-    .select("title, promotional_price, image_url, coupon_code")
+    .select("title, image_url")
     .eq("id", id)
     .maybeSingle();
 
   if (!offer) {
     return {
-      title: "Tenda da Promo | Oferta Especial",
-      description: "Confira as melhores ofertas na Tenda da Promo!",
+      title: "TENDA DA PROMO",
     };
   }
 
-  // const title = `🔥 ${offer.title} - R$ ${Number(offer.promotional_price).toFixed(2)}`;
-  const title = `🔥 OLHA ESSA PROMOÇÃO INCRÍVEL!`;
-  const description = offer.coupon_code
-    ? `Utilize o cupom ${offer.coupon_code} para garantir esta oferta na Tenda da Promo!`
-    : `Aproveite o menor preço na Tenda da Promo. Clique e confira!`;
+  // Texto curto em caixa alta para a base do card
+  const title = offer.title.toUpperCase();
 
   const imageUrl = offer.image_url?.startsWith("http://")
     ? offer.image_url.replace("http://", "https://")
     : offer.image_url;
 
   return {
-    // title,
-    // description,
+    title,
+    description: "", // Mantém vazio para não exibir o segundo bloco de texto
     openGraph: {
-      // title,
-      // description,
+      title,
+      description: "",
       url: `https://tenda-da-promo.vercel.app/ir/${id}`,
-      siteName: "Tenda da Promo",
+      siteName: "tenda-da-promo.vercel.app",
       images: [
         {
           url: imageUrl,
@@ -57,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title,
-      description,
+      description: "",
       images: [imageUrl],
     },
   };
