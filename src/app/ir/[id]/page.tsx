@@ -24,9 +24,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  // Texto curto em caixa alta para a base do card
-  const title = offer.title.toUpperCase();
-
   const imageUrl = offer.image_url?.startsWith("http://")
     ? offer.image_url.replace("http://", "https://")
     : offer.image_url;
@@ -52,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: " ",
       description: "",
       images: [imageUrl],
     },
