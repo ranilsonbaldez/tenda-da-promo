@@ -36,7 +36,7 @@ export function OfferCard({ offer }: OfferCardProps) {
 
     // Opção 1 + 2: 8 caracteres do UUID e sem https://
     const shortId = offer.id.split("-")[0];
-    const shareUrl = `tenda-da-promo.vercel.app/ir/${shortId}`;
+    const shareUrl = `https://tenda-da-promo.vercel.app/ir/${shortId}`;
     const siteUrl = "tenda-da-promo.vercel.app";
 
     const shareText = `🔥 *OFERTA IMPERDÍVEL!*
