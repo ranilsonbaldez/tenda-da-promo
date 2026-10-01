@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Texto curto em caixa alta para a base do card
-  // const title = offer.title.toUpperCase();
+  const title = offer.title.toUpperCase();
 
   const imageUrl = offer.image_url?.startsWith("http://")
     ? offer.image_url.replace("http://", "https://")
