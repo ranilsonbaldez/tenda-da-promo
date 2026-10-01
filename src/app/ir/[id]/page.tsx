@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data: offer } = await supabase
     .from("offers")
-    .select("title, image_url")
-    .eq("id", id)
+    .select("affiliate_link, title, image_url")
+    .like("id", `${id}%`)
     .maybeSingle();
 
   if (!offer) {
@@ -64,8 +64,8 @@ export default async function RedirectPage({ params }: Props) {
 
   const { data: offer } = await supabase
     .from("offers")
-    .select("affiliate_link")
-    .eq("id", id)
+    .select("affiliate_link, title, image_url")
+    .like("id", `${id}%`)
     .maybeSingle();
 
   const destination =

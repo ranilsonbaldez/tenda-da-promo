@@ -31,23 +31,23 @@ export function OfferCard({ offer }: OfferCardProps) {
     window.open(`/ir/${offer.id}`, "_blank");
   };
 
-  // Função para compartilhar nas redes / copiar link
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const shareUrl = `${window.location.origin}/ir/${offer.id}`;
-    const siteUrl = "https://tenda-da-promo.vercel.app";
+    // Opção 1 + 2: 8 caracteres do UUID e sem https://
+    const shortId = offer.id.split("-")[0];
+    const shareUrl = `tenda-da-promo.vercel.app/ir/${shortId}`;
+    const siteUrl = "tenda-da-promo.vercel.app";
 
-    // Texto limpo sem induzir preview da loja
     const shareText = `🔥 *OFERTA IMPERDÍVEL!*
 
 📌 *${offer.title}*
+
 ${
   offer.original_price && offer.original_price > offer.promotional_price
-    ? `🔥 DE ~R$ ${Number(offer.original_price).toFixed(2).replace(".", ",")}~ | POR *R$ ${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
-    : `💰 Por apenas: *R$ ${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
+    ? `🔥 DE ~${Number(offer.original_price).toFixed(2).replace(".", ",")}~ \vert{} POR *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
+    : `💰 Por apenas: *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
 }${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}
-
 👉 Garanta aqui: ${shareUrl}
 
 ---
