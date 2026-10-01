@@ -45,9 +45,9 @@ export function OfferCard({ offer }: OfferCardProps) {
 
 ${
   offer.original_price && offer.original_price > offer.promotional_price
-    ? `🔥 DE ~${Number(offer.original_price).toFixed(2).replace(".", ",")}~ | POR *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
-    : `💰 Por apenas: *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*\n`
-}${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*\n` : ""}
+    ? `🔥 DE ~${Number(offer.original_price).toFixed(2).replace(".", ",")}~ | POR *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*`
+    : `💰 Por apenas: *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*`
+}${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*` : ""}
 👉 ${shareUrl}
 
 ---
