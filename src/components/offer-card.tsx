@@ -73,7 +73,7 @@ export function OfferCard({ offer }: OfferCardProps) {
       "🤑 *DESCONTO DE VERDADE!*",
       "💣 *PREÇO EXPLOSIVO!*",
       "🛒 *JOGA NO CARRINHO AGORA!*",
-      "🛑 *PAROU TUDO! OLHA ESSE PREÇO!*",
+      "🛑 *PAROU TUDO! OLHA ESSA OFERTA!*",
     ];
 
     // Escolhe um aleatoriamente a cada compartilhamento
