@@ -41,10 +41,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const imageUrl = offer.image_url?.startsWith("http://")
-    ? offer.image_url.replace("http://", "https://")
-    : offer.image_url;
-
   const invisibleText = "\u200B";
 
   return {
@@ -55,22 +51,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "",
       url: `https://tenda-da-promo.vercel.app/ir/${id}`,
       siteName: "tenda-da-promo.vercel.app",
-      images: [
-        {
-          url: imageUrl,
-          secureUrl: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: offer.title,
-        },
-      ],
       type: "website",
+      // O Next.js injeta automaticamente o og:image do opengraph-image.tsx com 1200x630
     },
     twitter: {
       card: "summary_large_image",
       title: invisibleText,
       description: "",
-      images: [imageUrl],
     },
   };
 }
