@@ -49,7 +49,22 @@ export function OfferCard({ offer }: OfferCardProps) {
     const randomTitle =
       calloutTitles[Math.floor(Math.random() * calloutTitles.length)];
 
-    const productIdentifier = offer.slug || offer.id.split("-")[0];
+    function shortenSlug(slug: string, maxWords = 4): string {
+      if (!slug) return "";
+
+      // Se o slug tiver um sufixo aleatório no final (ex: "-ux22w"), preservamos ele
+      const parts = slug.split("-");
+
+      // Se for pequeno, retorna direto
+      if (parts.length <= maxWords) return slug;
+
+      // Pega as primeiras palavras
+      return parts.slice(0, maxWords).join("-");
+    }
+
+    const productIdentifier = offer.slug
+      ? shortenSlug(offer.slug, 3)
+      : offer.id.split("-")[0];
 
     // const shareUrl = `${window.location.origin}/ir/${offer.id}`;
     const shareUrl = `https://tenda-da-promo.vercel.app/ir/${productIdentifier}`;
