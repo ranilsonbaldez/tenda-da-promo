@@ -98,7 +98,17 @@ ${
 ⛺ *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*
 ${siteUrl}`;
 
-    if (navigator.share) {
+    // Prepara o link direto para o WhatsApp Web
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+    // Verifica estritamente se o utilizador está num dispositivo móvel (telemóvel ou tablet)
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
+
+    // 1. Se for dispositivo móvel E suportar partilha nativa, abre o menu do telemóvel
+    if (isMobile && navigator.share) {
       try {
         await navigator.share({
           title: offer.title,
@@ -110,6 +120,10 @@ ${siteUrl}`;
       }
     }
 
+    // 2. Se for Desktop (Chrome, Firefox, Edge, etc.), abre o WhatsApp Web diretamente
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+
+    // 3. Copia também o texto por segurança e mostra o feedback visual "Copiado!"
     try {
       await navigator.clipboard.writeText(shareText);
       setShared(true);
