@@ -43,44 +43,64 @@ async function getOfferByIdentifier(identifier: string) {
   }
 }
 
-// Trata URLs do Mercado Livre e outros CDNs convertendo para JPG e Base64
-async function fetchAndConvertImage(url: string): Promise<string | null> {
+async function fetchImageAsPngBase64(imageUrl: string): Promise<string | null> {
   try {
-    let targetUrl = url.trim();
+    let targetUrl = imageUrl.trim();
 
     if (targetUrl.startsWith("http://")) {
       targetUrl = targetUrl.replace("http://", "https://");
     }
 
-    // Tratamento específico para Mercado Livre (http2.mlstatic.com)
-    if (targetUrl.includes("mlstatic.com")) {
-      // Substitui o final .webp por .jpg
-      targetUrl = targetUrl.replace(/\.webp$/i, ".jpg");
+    // 1. Primeira tentativa: Tentar extensão .jpg
+    let jpgUrl = targetUrl;
+    if (jpgUrl.endsWith(".webp") && jpgUrl.includes("mlstatic.com")) {
+      jpgUrl = jpgUrl.replace(/\.webp$/i, ".jpg");
     }
 
-    const res = await fetch(targetUrl, {
+    const res = await fetch(jpgUrl, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
     });
 
-    if (!res.ok) {
-      // Tenta URL original se a modificação falhou
-      const fallbackRes = await fetch(url);
-      if (!fallbackRes.ok) return null;
-      const buffer = await fallbackRes.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString("base64");
-      return `data:image/jpeg;base64,${base64}`;
+    // Se o .jpg funcionou (status 200), converte em base64 e retorna
+    if (res.ok) {
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("webp")) {
+        const buffer = await res.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString("base64");
+        const mime = contentType.includes("png") ? "image/png" : "image/jpeg";
+        return `data:${mime};base64,${base64}`;
+      }
     }
 
-    const buffer = await res.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString("base64");
-    const mimeType = res.headers.get("content-type") || "image/jpeg";
+    // 2. Segunda tentativa: Se o .jpg falhar ou o CDN insistir em mandar webp,
+    // usa a rota de otimização do Next.js na Vercel para converter WebP em PNG/JPEG
+    const siteUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://tenda-da-promo.vercel.app";
 
-    return `data:${mimeType};base64,${base64}`;
+    const nextOptimizerUrl = `${siteUrl}/_next/image?url=${encodeURIComponent(
+      targetUrl,
+    )}&w=1200&q=85`;
+
+    const optimizerRes = await fetch(nextOptimizerUrl, {
+      headers: {
+        Accept: "image/png,image/jpeg,image/*",
+      },
+    });
+
+    if (optimizerRes.ok) {
+      const buffer = await optimizerRes.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+      const mime = optimizerRes.headers.get("content-type") || "image/png";
+      return `data:${mime};base64,${base64}`;
+    }
+
+    return null;
   } catch (e) {
-    console.error("Erro ao converter imagem para base64:", e);
+    console.error("Erro no processamento da imagem OG:", e);
     return null;
   }
 }
@@ -96,7 +116,7 @@ export default async function Image({
   let imageSrc: string | null = null;
 
   if (offer?.image_url) {
-    imageSrc = await fetchAndConvertImage(offer.image_url);
+    imageSrc = await fetchImageAsPngBase64(offer.image_url);
   }
 
   return new ImageResponse(
