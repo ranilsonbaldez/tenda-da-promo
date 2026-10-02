@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const baseUrl = "https://tenda-da-promo.vercel.app";
 
   // Passamos o parâmetro ?v=1 diretamente no og:image para forçar o WhatsApp a limpar o cache
-  const ogImageUrl = `${baseUrl}/ir/${id}/opengraph-image?v=1`;
+  const ogImageUrl = `${baseUrl}/ir/${id}/opengraph-image?v=2`;
 
   return {
     title: invisibleText,
@@ -59,8 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         {
           url: ogImageUrl,
-          width: 1200,
-          height: 630,
+          width: 800,
+          height: 600,
           alt: offer.title || "Oferta Tenda da Promo",
         },
       ],
