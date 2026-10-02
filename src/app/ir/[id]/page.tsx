@@ -12,10 +12,11 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
+  // Busca o produto por slug parcial (ilike), slug exato (eq) ou ID/UUID parcial (ilike)
   const { data: offer } = await supabase
     .from("offers")
     .select("title, image_url")
-    .eq("id", id)
+    .or(`slug.ilike.${id}%,slug.eq.${id},id.ilike.${id}%`)
     .maybeSingle();
 
   if (!offer) {
@@ -62,10 +63,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function RedirectPage({ params }: Props) {
   const { id } = await params;
 
+  // Aplica a mesma consulta flexível para resgatar o link do afiliado
   const { data: offer } = await supabase
     .from("offers")
     .select("affiliate_link")
-    .eq("id", id)
+    .or(`slug.ilike.${id}%,slug.eq.${id},id.ilike.${id}%`)
     .maybeSingle();
 
   const destination =
