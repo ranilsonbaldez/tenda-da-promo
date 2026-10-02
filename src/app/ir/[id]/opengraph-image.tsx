@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const alt = "Oferta Tenda da Promo";
 export const size = {
-  width: 900,
-  height: 730,
+  width: 1200,
+  height: 630,
 };
 export const contentType = "image/png";
 
@@ -14,9 +14,7 @@ async function getOfferByIdentifier(identifier: string) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return null;
-    }
+    if (!supabaseUrl || !supabaseAnonKey) return null;
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -38,7 +36,7 @@ async function getOfferByIdentifier(identifier: string) {
 
     return offerById;
   } catch (err) {
-    console.error("Erro ao buscar oferta:", err);
+    console.error("[OG DEBUG] Erro ao buscar no Supabase:", err);
     return null;
   }
 }
@@ -46,16 +44,19 @@ async function getOfferByIdentifier(identifier: string) {
 async function fetchImageAsPngBase64(imageUrl: string): Promise<string | null> {
   try {
     let targetUrl = imageUrl.trim();
-
     if (targetUrl.startsWith("http://")) {
       targetUrl = targetUrl.replace("http://", "https://");
     }
 
-    // 1. Primeira tentativa: Tentar extensão .jpg
+    console.log("[OG DEBUG] URL original da imagem:", targetUrl);
+
+    // 1. Teste de tentativa com .jpg
     let jpgUrl = targetUrl;
     if (jpgUrl.endsWith(".webp") && jpgUrl.includes("mlstatic.com")) {
       jpgUrl = jpgUrl.replace(/\.webp$/i, ".jpg");
     }
+
+    console.log("[OG DEBUG] Tentando baixar JPG:", jpgUrl);
 
     const res = await fetch(jpgUrl, {
       headers: {
@@ -64,19 +65,24 @@ async function fetchImageAsPngBase64(imageUrl: string): Promise<string | null> {
       },
     });
 
-    // Se o .jpg funcionou (status 200), converte em base64 e retorna
+    console.log(
+      "[OG DEBUG] Status do JPG:",
+      res.status,
+      res.headers.get("content-type"),
+    );
+
     if (res.ok) {
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("webp")) {
         const buffer = await res.arrayBuffer();
         const base64 = Buffer.from(buffer).toString("base64");
         const mime = contentType.includes("png") ? "image/png" : "image/jpeg";
+        console.log("[OG DEBUG] Sucesso via JPG direto!");
         return `data:${mime};base64,${base64}`;
       }
     }
 
-    // 2. Segunda tentativa: Se o .jpg falhar ou o CDN insistir em mandar webp,
-    // usa a rota de otimização do Next.js na Vercel para converter WebP em PNG/JPEG
+    // 2. Teste via Next.js Optimizer
     const siteUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : "https://tenda-da-promo.vercel.app";
@@ -85,22 +91,32 @@ async function fetchImageAsPngBase64(imageUrl: string): Promise<string | null> {
       targetUrl,
     )}&w=1200&q=85`;
 
+    console.log("[OG DEBUG] Tentando via Optimizer:", nextOptimizerUrl);
+
     const optimizerRes = await fetch(nextOptimizerUrl, {
       headers: {
         Accept: "image/png,image/jpeg,image/*",
       },
     });
 
+    console.log(
+      "[OG DEBUG] Status do Optimizer:",
+      optimizerRes.status,
+      optimizerRes.headers.get("content-type"),
+    );
+
     if (optimizerRes.ok) {
       const buffer = await optimizerRes.arrayBuffer();
       const base64 = Buffer.from(buffer).toString("base64");
       const mime = optimizerRes.headers.get("content-type") || "image/png";
+      console.log("[OG DEBUG] Sucesso via Optimizer!");
       return `data:${mime};base64,${base64}`;
     }
 
+    console.log("[OG DEBUG] Todas as tentativas de conversão falharam.");
     return null;
   } catch (e) {
-    console.error("Erro no processamento da imagem OG:", e);
+    console.error("[OG DEBUG] Exceção capturada:", e);
     return null;
   }
 }
@@ -112,6 +128,8 @@ export default async function Image({
 }) {
   const { id } = await params;
   const offer = await getOfferByIdentifier(id);
+
+  console.log("[OG DEBUG] Oferta encontrada:", offer?.id, offer?.title);
 
   let imageSrc: string | null = null;
 
