@@ -35,11 +35,28 @@ export function OfferCard({ offer }: OfferCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const shareUrl = `${window.location.origin}/ir/${offer.id}`;
+    // Lista de variações de títulos chamativos
+    const calloutTitles = [
+      "🔥 *OFERTA IMPERDÍVEL!*",
+      "⚡ *MENOR PREÇO DO DIA!*",
+      "🚨 *PROMOÇÃO RELÂMPAGO!*",
+      "💥 *BAIXOU O PREÇO!*",
+      "✨ *ACHADINHO IMPERDÍVEL!*",
+      "👀 *OLHA ESSE DESCONTO!*",
+    ];
+
+    // Escolhe um aleatoriamente a cada compartilhamento
+    const randomTitle =
+      calloutTitles[Math.floor(Math.random() * calloutTitles.length)];
+
+    const productIdentifier = offer.slug || offer.id.split("-")[0];
+
+    // const shareUrl = `${window.location.origin}/ir/${offer.id}`;
+    const shareUrl = `https://tenda-da-promo.vercel.app/ir/${productIdentifier}`;
     const siteUrl = "tenda-da-promo.vercel.app";
 
     // Texto limpo sem induzir preview da loja
-    const shareText = `🔥 *OFERTA IMPERDÍVEL!*
+    const shareText = `${randomTitle}
 
 📌 *${offer.title}*
 
@@ -48,7 +65,7 @@ ${
     ? `🔥 DE ~${Number(offer.original_price).toFixed(2).replace(".", ",")}~ | POR *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*`
     : `💰 Por apenas: *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*`
 }${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*` : ""}
-👉 ${shareUrl}
+🔗 ${shareUrl}
 
 ---
 ⛺ *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*
