@@ -28,7 +28,20 @@ export function OfferCard({ offer }: OfferCardProps) {
       setTimeout(() => setCopied(false), 3000);
     }
 
-    window.open(`/ir/${offer.id}`, "_blank");
+    // Garante que o link exista e tenha o protocolo https://
+    let targetUrl = offer.affiliate_link;
+
+    if (targetUrl) {
+      if (
+        !targetUrl.startsWith("http://") &&
+        !targetUrl.startsWith("https://")
+      ) {
+        targetUrl = `https://${targetUrl}`;
+      }
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
+    } else {
+      console.error("Link de afiliado não encontrado.");
+    }
   };
 
   // Função para compartilhar nas redes / copiar link
