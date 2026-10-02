@@ -71,7 +71,7 @@ export function OfferCard({ offer }: OfferCardProps) {
 
       // --- Foco em Oportunidade & Preço ---
       "🤑 *DESCONTO DE VERDADE!*",
-      "💣 *PREÇOEXPLOSIVO!*",
+      "💣 *PREÇO EXPLOSIVO!*",
       "🛒 *JOGA NO CARRINHO AGORA!*",
       "🛑 *PAROU TUDO! OLHA ESSE PREÇO!*",
     ];

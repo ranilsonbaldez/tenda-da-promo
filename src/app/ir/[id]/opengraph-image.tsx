@@ -15,13 +15,12 @@ async function getOfferByIdentifier(identifier: string) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("Variáveis de ambiente do Supabase ausentes!");
+      console.error("Variáveis do Supabase ausentes!");
       return null;
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // 1. Tenta por slug
     const { data: offerBySlug } = await supabase
       .from("offers")
       .select("id, title, image_url")
@@ -31,7 +30,6 @@ async function getOfferByIdentifier(identifier: string) {
 
     if (offerBySlug) return offerBySlug;
 
-    // 2. Tenta por id
     const { data: offerById } = await supabase
       .from("offers")
       .select("id, title, image_url")
@@ -54,7 +52,20 @@ export default async function Image({
   const { id } = await params;
   const offer = await getOfferByIdentifier(id);
 
-  const imageUrl = offer?.image_url;
+  let imageUrl = offer?.image_url;
+
+  // Trata a imagem para garantir compatibilidade com o Vercel OG (Satori)
+  if (imageUrl) {
+    // 1. Força HTTPS
+    if (imageUrl.startsWith("http://")) {
+      imageUrl = imageUrl.replace("http://", "https://");
+    }
+
+    // 2. Se for WebP do Mercado Livre, substitui o sufixo .webp por .jpg (o CDN do Mercado Livre entrega JPG automaticamente)
+    if (imageUrl.endsWith(".webp")) {
+      imageUrl = imageUrl.replace(/\.webp$/i, ".jpg");
+    }
+  }
 
   return new ImageResponse(
     <div
