@@ -57,10 +57,7 @@ export default async function Image({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={
-          offer?.image_url ||
-          "https://tenda-da-promo.vercel.app/og-fallback.png"
-        }
+        src={offer?.image_url || "https://tenda-da-promo.vercel.app/logo.png"}
         alt={offer?.title || "Oferta"}
         style={{
           maxHeight: "100%",
