@@ -9,15 +9,31 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+async function getOfferByIdentifier(identifier: string) {
+  // 1. Tenta buscar por slug que comece com o termo enviado (ex: relogio-smartwatch%)
+  const { data: offerBySlug } = await supabase
+    .from("offers")
+    .select("id, title, image_url, affiliate_link")
+    .ilike("slug", `${identifier}%`)
+    .limit(1)
+    .maybeSingle();
+
+  if (offerBySlug) return offerBySlug;
+
+  // 2. Se não achou por slug, tenta buscar pelo ID original (caso seja UUID)
+  const { data: offerById } = await supabase
+    .from("offers")
+    .select("id, title, image_url, affiliate_link")
+    .or(`id.eq.${identifier},id.ilike.${identifier}%`)
+    .limit(1)
+    .maybeSingle();
+
+  return offerById;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-
-  // Busca o produto por slug parcial (ilike), slug exato (eq) ou ID/UUID parcial (ilike)
-  const { data: offer } = await supabase
-    .from("offers")
-    .select("title, image_url")
-    .or(`slug.ilike.${id}%,slug.eq.${id},id.ilike.${id}%`)
-    .maybeSingle();
+  const offer = await getOfferByIdentifier(id);
 
   if (!offer) {
     return {
@@ -29,7 +45,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? offer.image_url.replace("http://", "https://")
     : offer.image_url;
 
-  // Usa caractere invisível para forçar o WhatsApp a ocultar a linha do título
   const invisibleText = "\u200B";
 
   return {
@@ -62,13 +77,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RedirectPage({ params }: Props) {
   const { id } = await params;
-
-  // Aplica a mesma consulta flexível para resgatar o link do afiliado
-  const { data: offer } = await supabase
-    .from("offers")
-    .select("affiliate_link")
-    .or(`slug.ilike.${id}%,slug.eq.${id},id.ilike.${id}%`)
-    .maybeSingle();
+  const offer = await getOfferByIdentifier(id);
 
   const destination =
     offer?.affiliate_link || "https://tenda-da-promo.vercel.app";
