@@ -9,41 +9,39 @@ export const size = {
 };
 export const contentType = "image/png";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 async function getOfferByIdentifier(identifier: string) {
-  const { data: offerBySlug } = await supabase
-    .from("offers")
-    .select("id, title, image_url")
-    .ilike("slug", `${identifier}%`)
-    .limit(1)
-    .maybeSingle();
-
-  if (offerBySlug) return offerBySlug;
-
-  const { data: offerById } = await supabase
-    .from("offers")
-    .select("id, title, image_url")
-    .or(`id.eq.${identifier},id.ilike.${identifier}%`)
-    .limit(1)
-    .maybeSingle();
-
-  return offerById;
-}
-
-// Função auxiliar para carregar a imagem externa sem quebrar o canvas do Vercel OG
-async function fetchImageAsBase64(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, { cache: "force-cache" });
-    if (!res.ok) return null;
-    const buffer = await res.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString("base64");
-    const contentType = res.headers.get("content-type") || "image/jpeg";
-    return `data:${contentType};base64,${base64}`;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Variáveis de ambiente do Supabase ausentes!");
+      return null;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    // 1. Tenta por slug
+    const { data: offerBySlug } = await supabase
+      .from("offers")
+      .select("id, title, image_url")
+      .ilike("slug", `${identifier}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (offerBySlug) return offerBySlug;
+
+    // 2. Tenta por id
+    const { data: offerById } = await supabase
+      .from("offers")
+      .select("id, title, image_url")
+      .or(`id.eq.${identifier},id.ilike.${identifier}%`)
+      .limit(1)
+      .maybeSingle();
+
+    return offerById;
   } catch (err) {
-    console.error("Erro ao buscar imagem externa para OG:", err);
+    console.error("Erro na busca da oferta no OG:", err);
     return null;
   }
 }
@@ -56,48 +54,12 @@ export default async function Image({
   const { id } = await params;
   const offer = await getOfferByIdentifier(id);
 
-  let imageSrc: string | null = null;
-
-  if (offer?.image_url) {
-    const formattedUrl = offer.image_url.startsWith("http://")
-      ? offer.image_url.replace("http://", "https://")
-      : offer.image_url;
-
-    imageSrc = await fetchImageAsBase64(formattedUrl);
-  }
-
-  // Se falhar o fetch da imagem externa, usa um SVG/fundo padrão simples com o texto
-  if (!imageSrc) {
-    return new ImageResponse(
-      <div
-        style={{
-          background: "linear-gradient(135deg, #5B50B1 0%, #E52427 100%)",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          fontSize: 48,
-          fontWeight: "bold",
-          padding: "40px",
-          textAlign: "center",
-        }}
-      >
-        <span>⛺ Tenda da Promo</span>
-        <span style={{ fontSize: 28, marginTop: 20, opacity: 0.9 }}>
-          {offer?.title || "Confira essa oferta incrível!"}
-        </span>
-      </div>,
-      { ...size },
-    );
-  }
+  const imageUrl = offer?.image_url;
 
   return new ImageResponse(
     <div
       style={{
-        background: "white",
+        background: "#ffffff",
         width: "100%",
         height: "100%",
         display: "flex",
@@ -106,16 +68,34 @@ export default async function Image({
         padding: "40px",
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={imageSrc}
-        alt="Oferta"
-        style={{
-          maxHeight: "100%",
-          maxWidth: "100%",
-          objectFit: "contain",
-        }}
-      />
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt="Oferta"
+          style={{
+            maxHeight: "100%",
+            maxWidth: "100%",
+            objectFit: "contain",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1 style={{ fontSize: 48, color: "#5B50B1", marginBottom: 10 }}>
+            ⛺ Tenda da Promo
+          </h1>
+          <p style={{ fontSize: 24, color: "#333333" }}>
+            {offer?.title || "Oferta Imperdível"}
+          </p>
+        </div>
+      )}
     </div>,
     {
       ...size,
