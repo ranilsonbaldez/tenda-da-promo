@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const alt = "Oferta Tenda da Promo";
 export const size = {
-  width: 1200,
-  height: 630,
+  width: 1000,
+  height: 830,
 };
 export const contentType = "image/png";
 
