@@ -49,22 +49,16 @@ export function OfferCard({ offer }: OfferCardProps) {
     const randomTitle =
       calloutTitles[Math.floor(Math.random() * calloutTitles.length)];
 
-    function shortenSlug(slug: string, maxWords = 3): string {
+    function shortenSlug(slug: string, maxWords = 4): string {
       if (!slug) return "";
 
       const parts = slug.split("-");
 
-      // Se o slug tiver menos ou o mesmo número de partes que o limite, retorna completo
+      // Se o slug for curto, retorna-o completo
       if (parts.length <= maxWords) return slug;
 
-      // Pega o código único no final (último elemento)
-      const suffix = parts[parts.length - 1];
-
-      // Pega as primeiras palavras (descontando o espaço do sufixo)
-      const mainWords = parts.slice(0, maxWords - 1).join("-");
-
-      // Junta as palavras com o sufixo no final
-      return `${mainWords}-${suffix}`;
+      // Pega apenas as primeiras N palavras
+      return parts.slice(0, maxWords).join("-");
     }
 
     const productIdentifier = offer.slug
