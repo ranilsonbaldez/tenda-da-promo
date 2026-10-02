@@ -14,7 +14,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 async function getOfferByIdentifier(identifier: string) {
-  // 1. Tenta buscar por slug que comece com o termo enviado
   const { data: offerBySlug } = await supabase
     .from("offers")
     .select("id, title, image_url")
@@ -24,7 +23,6 @@ async function getOfferByIdentifier(identifier: string) {
 
   if (offerBySlug) return offerBySlug;
 
-  // 2. Se não achou por slug, tenta buscar pelo ID original
   const { data: offerById } = await supabase
     .from("offers")
     .select("id, title, image_url")
@@ -35,6 +33,21 @@ async function getOfferByIdentifier(identifier: string) {
   return offerById;
 }
 
+// Função auxiliar para carregar a imagem externa sem quebrar o canvas do Vercel OG
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { cache: "force-cache" });
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    const contentType = res.headers.get("content-type") || "image/jpeg";
+    return `data:${contentType};base64,${base64}`;
+  } catch (err) {
+    console.error("Erro ao buscar imagem externa para OG:", err);
+    return null;
+  }
+}
+
 export default async function Image({
   params,
 }: {
@@ -43,11 +56,43 @@ export default async function Image({
   const { id } = await params;
   const offer = await getOfferByIdentifier(id);
 
-  // Garante uma URL válida ou fallback para evitar exceções de parsing
-  const imageUrl =
-    offer?.image_url && offer.image_url.startsWith("http")
-      ? offer.image_url
-      : "https://tenda-da-promo.vercel.app/logo.png";
+  let imageSrc: string | null = null;
+
+  if (offer?.image_url) {
+    const formattedUrl = offer.image_url.startsWith("http://")
+      ? offer.image_url.replace("http://", "https://")
+      : offer.image_url;
+
+    imageSrc = await fetchImageAsBase64(formattedUrl);
+  }
+
+  // Se falhar o fetch da imagem externa, usa um SVG/fundo padrão simples com o texto
+  if (!imageSrc) {
+    return new ImageResponse(
+      <div
+        style={{
+          background: "linear-gradient(135deg, #5B50B1 0%, #E52427 100%)",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          fontSize: 48,
+          fontWeight: "bold",
+          padding: "40px",
+          textAlign: "center",
+        }}
+      >
+        <span>⛺ Tenda da Promo</span>
+        <span style={{ fontSize: 28, marginTop: 20, opacity: 0.9 }}>
+          {offer?.title || "Confira essa oferta incrível!"}
+        </span>
+      </div>,
+      { ...size },
+    );
+  }
 
   return new ImageResponse(
     <div
@@ -63,7 +108,7 @@ export default async function Image({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={imageUrl}
+        src={imageSrc}
         alt="Oferta"
         style={{
           maxHeight: "100%",
