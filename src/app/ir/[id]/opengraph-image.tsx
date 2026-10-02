@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const alt = "Oferta Tenda da Promo";
 export const size = {
-  width: 1200,
-  height: 630,
+  width: 900,
+  height: 730,
 };
 export const contentType = "image/png";
 
@@ -43,17 +43,18 @@ async function getOfferByIdentifier(identifier: string) {
   }
 }
 
-// Função para buscar a imagem e converter para Data URL de forma segura
-async function getValidImageDataUrl(url: string): Promise<string | null> {
+// Trata URLs do Mercado Livre e outros CDNs convertendo para JPG e Base64
+async function fetchAndConvertImage(url: string): Promise<string | null> {
   try {
-    let targetUrl = url;
+    let targetUrl = url.trim();
 
     if (targetUrl.startsWith("http://")) {
       targetUrl = targetUrl.replace("http://", "https://");
     }
 
-    // Tratamento específico para Mercado Livre WebP -> JPG
-    if (targetUrl.endsWith(".webp") && targetUrl.includes("mlstatic.com")) {
+    // Tratamento específico para Mercado Livre (http2.mlstatic.com)
+    if (targetUrl.includes("mlstatic.com")) {
+      // Substitui o final .webp por .jpg
       targetUrl = targetUrl.replace(/\.webp$/i, ".jpg");
     }
 
@@ -64,19 +65,23 @@ async function getValidImageDataUrl(url: string): Promise<string | null> {
       },
     });
 
-    if (!res.ok) return targetUrl; // Retorna a URL original como fallback
+    if (!res.ok) {
+      // Tenta URL original se a modificação falhou
+      const fallbackRes = await fetch(url);
+      if (!fallbackRes.ok) return null;
+      const buffer = await fallbackRes.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+      return `data:image/jpeg;base64,${base64}`;
+    }
 
-    const contentType = res.headers.get("content-type") || "";
-
-    // Se for webp e não for Mercado Livre, tenta passar o buffer direto em base64
-    const arrayBuffer = await res.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString("base64");
-    const mimeType = contentType || "image/jpeg";
+    const buffer = await res.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    const mimeType = res.headers.get("content-type") || "image/jpeg";
 
     return `data:${mimeType};base64,${base64}`;
   } catch (e) {
-    console.error("Erro ao carregar imagem externa:", e);
-    return url;
+    console.error("Erro ao converter imagem para base64:", e);
+    return null;
   }
 }
 
@@ -91,7 +96,7 @@ export default async function Image({
   let imageSrc: string | null = null;
 
   if (offer?.image_url) {
-    imageSrc = await getValidImageDataUrl(offer.image_url);
+    imageSrc = await fetchAndConvertImage(offer.image_url);
   }
 
   return new ImageResponse(
