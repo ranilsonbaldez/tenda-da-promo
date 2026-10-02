@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const alt = "Oferta Tenda da Promo";
 export const size = {
   width: 1200,
@@ -43,6 +43,12 @@ export default async function Image({
   const { id } = await params;
   const offer = await getOfferByIdentifier(id);
 
+  // Garante uma URL válida ou fallback para evitar exceções de parsing
+  const imageUrl =
+    offer?.image_url && offer.image_url.startsWith("http")
+      ? offer.image_url
+      : "https://tenda-da-promo.vercel.app/logo.png";
+
   return new ImageResponse(
     <div
       style={{
@@ -57,8 +63,8 @@ export default async function Image({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={offer?.image_url || "https://tenda-da-promo.vercel.app/logo.png"}
-        alt={offer?.title || "Oferta"}
+        src={imageUrl}
+        alt="Oferta"
         style={{
           maxHeight: "100%",
           maxWidth: "100%",
