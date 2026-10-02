@@ -77,7 +77,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RedirectPage({ params }: Props) {
   const { id } = await params;
+  console.log("--> PARÂMETRO RECEBIDO NA URL:", id);
   const offer = await getOfferByIdentifier(id);
+  console.log("--> RESULTADO DA BUSCA NO SUPABASE:", offer);
 
   const destination =
     offer?.affiliate_link || "https://tenda-da-promo.vercel.app";
