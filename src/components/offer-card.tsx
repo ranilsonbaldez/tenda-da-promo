@@ -49,13 +49,31 @@ export function OfferCard({ offer }: OfferCardProps) {
     e.stopPropagation();
 
     // Lista de variações de títulos chamativos
+    // Lista expandida de variações de títulos chamativos
     const calloutTitles = [
+      // --- Originais e Clássicos ---
       "🔥 *OFERTA IMPERDÍVEL!*",
       "⚡ *MENOR PREÇO DO DIA!*",
       "🚨 *PROMOÇÃO RELÂMPAGO!*",
       "💥 *BAIXOU O PREÇO!*",
       "✨ *ACHADINHO IMPERDÍVEL!*",
       "👀 *OLHA ESSE DESCONTO!*",
+
+      // --- Descontraídos & Divertidos ---
+      "👀 *OLHA O QUE EU ACHEI PRA VOCÊ!*",
+      "💸 *MINHA CARTEIRA CHEGA A CHORAR!*",
+      "🗣️ *PARA TUDO E OLHA ISSO!*",
+      "🏃‍♂️ *CORRE QUE DÁ TEMPO!*",
+      "😱 *O ESTOQUE VAI VOAR!*",
+      "🎯 *ACERTOU EM CHEIO NO DESCONTO!*",
+      "🚀 *PREÇO LÁ EM BAIXO!*",
+      "🎁 *PRESENTE PRA VOCÊ (E PRO SEU BOLSO)!*",
+
+      // --- Foco em Oportunidade & Preço ---
+      "🤑 *DESCONTO DE VERDADE!*",
+      "💣 *PREÇOEXPLOSIVO!*",
+      "🛒 *JOGA NO CARRINHO AGORA!*",
+      "🛑 *PAROU TUDO! OLHA ESSE PREÇO!*",
     ];
 
     // Escolhe um aleatoriamente a cada compartilhamento
@@ -85,7 +103,7 @@ export function OfferCard({ offer }: OfferCardProps) {
     // Texto limpo sem induzir preview da loja
     const shareText = `${randomTitle}
 
-📌 *${offer.title}*
+🛍️ *${offer.title}*
 
 ${
   offer.original_price && offer.original_price > offer.promotional_price
@@ -96,7 +114,7 @@ ${
 
 ---
 ⛺ *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*
-${siteUrl}`;
+🔗 ${siteUrl}`;
 
     // Prepara o link direto para o WhatsApp Web
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
