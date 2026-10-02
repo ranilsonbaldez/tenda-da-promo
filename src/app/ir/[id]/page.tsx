@@ -42,6 +42,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const invisibleText = "\u200B";
+  const baseUrl = "https://tenda-da-promo.vercel.app";
+
+  // Passamos o parâmetro ?v=1 diretamente no og:image para forçar o WhatsApp a limpar o cache
+  const ogImageUrl = `${baseUrl}/ir/${id}/opengraph-image?v=1`;
 
   return {
     title: invisibleText,
@@ -49,15 +53,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: invisibleText,
       description: "",
-      url: `https://tenda-da-promo.vercel.app/ir/${id}`,
+      url: `${baseUrl}/ir/${id}`,
       siteName: "tenda-da-promo.vercel.app",
       type: "website",
-      // O Next.js injeta automaticamente o og:image do opengraph-image.tsx com 1200x630
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: offer.title || "Oferta Tenda da Promo",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: invisibleText,
       description: "",
+      images: [ogImageUrl],
     },
   };
 }
