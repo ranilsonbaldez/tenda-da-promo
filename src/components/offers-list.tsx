@@ -177,7 +177,7 @@ export function OffersList({ initialOffers, categories }: OffersListProps) {
 
       {/* Lista de Cards */}
       {filteredOffers.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {filteredOffers.map((offer) => (
             <OfferCard key={offer.id} offer={offer} />
           ))}
