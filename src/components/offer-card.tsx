@@ -240,19 +240,25 @@ ${
           {offer.title}
         </h3>
 
-        <div className="w-full mt-auto">
-          {offer.original_price && (
-            <span className="text-xs line-through text-zinc-400 block">
-              R$ {offer.original_price.toFixed(2)}
+        <div className="w-full mt-auto pt-2 flex flex-col justify-end min-h-11">
+          {offer.original_price ? (
+            <span className="text-[11px] sm:text-xs line-through text-zinc-400 block leading-none mb-0.5">
+              R$ {offer.original_price.toFixed(2).replace(".", ",")}
+            </span>
+          ) : (
+            /* Mantém o espaço reservado para não desalinharem os cards sem desconto */
+            <span className="text-[11px] sm:text-xs block leading-none mb-0.5 invisible">
+              R$ 0,00
             </span>
           )}
-          <span className="text-2xl font-black text-[#E52427]">
-            R$ {offer.promotional_price.toFixed(2)}
+
+          <span className="text-base sm:text-xl font-black text-[#E52427] leading-none">
+            R$ {offer.promotional_price.toFixed(2).replace(".", ",")}
           </span>
         </div>
       </CardContent>
 
-      <CardFooter className="p-3 sm:p-4 pt-0">
+      <CardFooter className="p-3 sm:p-4 flex items-center justify-center">
         <Button
           onClick={handleAction}
           className="w-full bg-[#c2650e] hover:bg-[#8a4301] text-white font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] transition-all border-none h-9 sm:h-10 text-xs sm:text-sm px-2"
