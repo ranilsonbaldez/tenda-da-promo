@@ -9,7 +9,7 @@ export default async function HomePage() {
 
   const { data: offers } = await supabase
     .from("offers")
-    .select("*, stores(name, logo_url)")
+    .select("*, stores(name, logo_url), categories(name, slug)")
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order("created_at", { ascending: false });
 

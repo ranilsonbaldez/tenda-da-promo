@@ -227,6 +227,15 @@ ${
           )}
         </div>
 
+        {/* Categoria (Logo abaixo da loja e acima do título) */}
+        {offer.categories?.name && (
+          <div className="w-full flex justify-start mb-1.5">
+            <span className="inline-block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
+              {offer.categories.name}
+            </span>
+          </div>
+        )}
+
         <h3 className="font-semibold text-sm line-clamp-2 w-full text-zinc-800 dark:text-zinc-200 mb-2 min-h-10">
           {offer.title}
         </h3>

@@ -24,10 +24,16 @@ import {
   Trash2,
   ListOrdered,
   XCircle,
+  FolderTree,
 } from "lucide-react";
 import Link from "next/link";
 
 interface Store {
+  id: string;
+  name: string;
+}
+
+interface Category {
   id: string;
   name: string;
 }
@@ -42,25 +48,34 @@ interface Offer {
   promotional_price: number;
   coupon_code: string | null;
   store_id: string;
+  category_id?: string | null;
   expires_at: string | null;
   is_featured: boolean;
   created_at?: string;
   stores?: { name: string } | null;
+  categories?: { name: string } | null;
 }
 
 export default function NewOfferPage() {
-  // Estados gerais
+  // Estados de dados
   const [stores, setStores] = useState<Store[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
+
+  // Estados de carregamento
   const [isLoadingStores, setIsLoadingStores] = useState(true);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingOffers, setIsLoadingOffers] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Mensagens e feedback
   const [isSuccess, setIsSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [imagePreviewError, setImagePreviewError] = useState(false);
 
-  // Estado do item em edição (null = criando novo)
+  // Estado da oferta em edição
   const [editingOfferId, setEditingOfferId] = useState<string | null>(null);
 
   // Campos do formulário
@@ -71,10 +86,11 @@ export default function NewOfferPage() {
   const [promotionalPrice, setPromotionalPrice] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [storeId, setStoreId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
 
-  // Carregar dados iniciais na montagem do componente
+  // Carregar dados iniciais (Lojas, Categorias e Ofertas)
   useEffect(() => {
     let isMounted = true;
 
@@ -89,11 +105,9 @@ export default function NewOfferPage() {
         if (isMounted) {
           if (storesError) {
             console.error("Erro ao carregar lojas:", storesError.message);
-          } else if (storesData) {
+          } else if (storesData && storesData.length > 0) {
             setStores(storesData);
-            if (storesData.length > 0) {
-              setStoreId((prev) => (prev ? prev : storesData[0].id));
-            }
+            setStoreId((prev) => (prev ? prev : storesData[0].id));
           }
         }
       } catch (err) {
@@ -102,11 +116,35 @@ export default function NewOfferPage() {
         if (isMounted) setIsLoadingStores(false);
       }
 
-      // 2. Carregar Ofertas
+      // 2. Carregar Categorias
+      try {
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from("categories")
+          .select("id, name")
+          .order("name", { ascending: true });
+
+        if (isMounted) {
+          if (categoriesError) {
+            console.error(
+              "Erro ao carregar categorias:",
+              categoriesError.message,
+            );
+          } else if (categoriesData && categoriesData.length > 0) {
+            setCategories(categoriesData);
+            setCategoryId((prev) => (prev ? prev : categoriesData[0].id));
+          }
+        }
+      } catch (err) {
+        console.error("Erro inesperado ao carregar categorias:", err);
+      } finally {
+        if (isMounted) setIsLoadingCategories(false);
+      }
+
+      // 3. Carregar Ofertas
       try {
         const { data: offersData, error: offersError } = await supabase
           .from("offers")
-          .select("*, stores(name)")
+          .select("*, stores(name), categories(name)")
           .order("created_at", { ascending: false });
 
         if (isMounted) {
@@ -130,13 +168,13 @@ export default function NewOfferPage() {
     };
   }, []);
 
-  // Função auxiliar para recarregar a lista de ofertas após salvar ou editar
+  // Recarregar a lista de ofertas
   async function reloadOffers() {
     setIsLoadingOffers(true);
     try {
       const { data, error } = await supabase
         .from("offers")
-        .select("*, stores(name)")
+        .select("*, stores(name), categories(name)")
         .order("created_at", { ascending: false });
 
       if (error) console.error("Erro ao carregar ofertas:", error.message);
@@ -148,7 +186,7 @@ export default function NewOfferPage() {
     }
   }
 
-  // Helper para Slug Único
+  // Gerador de Slug
   function createSlug(text: string): string {
     const baseSlug = text
       .toLowerCase()
@@ -163,7 +201,7 @@ export default function NewOfferPage() {
     return `${baseSlug}-${uniqueHash}`;
   }
 
-  // Helper para converter valores numéricos
+  // Conversor de Preços
   function parsePrice(val: string): number | null {
     if (!val) return null;
     let cleaned = val.trim();
@@ -186,25 +224,34 @@ export default function NewOfferPage() {
     setExpiresAt("");
     setIsFeatured(false);
     setErrorMessage("");
+    setImagePreviewError(false);
+    if (stores.length > 0) setStoreId(stores[0].id);
+    if (categories.length > 0) setCategoryId(categories[0].id);
   }
 
-  // Preencher formulário para edição
+  // Iniciar Edição
   function handleStartEdit(offer: Offer) {
     setEditingOfferId(offer.id);
     setTitle(offer.title);
-    setImageUrl(offer.image_url);
+    setImageUrl(offer.image_url || "");
     setAffiliateLink(offer.affiliate_link);
-    setOriginalPrice(offer.original_price ? String(offer.original_price) : "");
+    setOriginalPrice(
+      offer.original_price !== null ? String(offer.original_price) : "",
+    );
     setPromotionalPrice(String(offer.promotional_price));
     setCouponCode(offer.coupon_code || "");
     setStoreId(offer.store_id);
+    setCategoryId(
+      offer.category_id || (categories.length > 0 ? categories[0].id : ""),
+    );
     setExpiresAt(offer.expires_at ? offer.expires_at.slice(0, 16) : "");
     setIsFeatured(offer.is_featured);
     setErrorMessage("");
+    setImagePreviewError(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Deletar oferta
+  // Apagar Oferta
   async function handleDeleteOffer(id: string) {
     if (!confirm("Tem certeza de que deseja apagar esta oferta?")) return;
 
@@ -225,7 +272,7 @@ export default function NewOfferPage() {
     }
   }
 
-  // Envio (Criar ou Atualizar)
+  // Submeter Formulário
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsSubmitting(true);
@@ -252,12 +299,12 @@ export default function NewOfferPage() {
         promotional_price: parsedPromotional,
         coupon_code: couponCode.trim() || null,
         store_id: storeId,
+        category_id: categoryId || null,
         expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
         is_featured: isFeatured,
       };
 
       if (editingOfferId) {
-        // Atualização
         const { error } = await supabase
           .from("offers")
           .update(payload)
@@ -266,7 +313,6 @@ export default function NewOfferPage() {
         if (error) throw new Error(error.message);
         setSuccessMessage("Oferta atualizada com sucesso!");
       } else {
-        // Criação
         const { error } = await supabase.from("offers").insert([
           {
             ...payload,
@@ -317,7 +363,7 @@ export default function NewOfferPage() {
           </Button>
         </div>
 
-        {/* Form Card */}
+        {/* Formulário */}
         <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
           <CardHeader className="bg-[#000000] text-white px-5 py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -366,7 +412,7 @@ export default function NewOfferPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Título, Loja e Cupom */}
+              {/* Título, Loja, Categoria e Cupom */}
               <div className="space-y-3">
                 <div>
                   <Label
@@ -386,19 +432,19 @@ export default function NewOfferPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <Label
                       htmlFor="store"
                       className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
                     >
                       <StoreIcon className="w-3.5 h-3.5 text-[#5B50B1]" /> Loja
-                      / Plataforma *
+                      *
                     </Label>
                     {isLoadingStores ? (
                       <div className="text-xs text-zinc-500 h-10 flex items-center">
                         <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{" "}
-                        Carregando lojas...
+                        Carregando...
                       </div>
                     ) : (
                       <select
@@ -411,6 +457,36 @@ export default function NewOfferPage() {
                         {stores.map((store) => (
                           <option key={store.id} value={store.id}>
                             {store.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="category"
+                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 mb-1"
+                    >
+                      <FolderTree className="w-3.5 h-3.5 text-[#5B50B1]" />{" "}
+                      Categoria
+                    </Label>
+                    {isLoadingCategories ? (
+                      <div className="text-xs text-zinc-500 h-10 flex items-center">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{" "}
+                        Carregando...
+                      </div>
+                    ) : (
+                      <select
+                        id="category"
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                        className="w-full h-10 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5B50B1]"
+                      >
+                        <option value="">Sem categoria</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
                           </option>
                         ))}
                       </select>
@@ -451,7 +527,10 @@ export default function NewOfferPage() {
                       id="imageUrl"
                       type="url"
                       value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
+                      onChange={(e) => {
+                        setImageUrl(e.target.value);
+                        setImagePreviewError(false);
+                      }}
                       className="h-10 font-mono text-xs"
                     />
                   </div>
@@ -478,18 +557,22 @@ export default function NewOfferPage() {
                 {imageUrl.trim().length > 10 && (
                   <div className="p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-700 flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded border overflow-hidden relative shrink-0 flex items-center justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={imageUrl}
-                        alt="Preview"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
+                      {!imagePreviewError ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={imageUrl}
+                          alt="Preview"
+                          className="w-full h-full object-contain"
+                          onError={() => setImagePreviewError(true)}
+                        />
+                      ) : (
+                        <ImageIcon className="w-5 h-5 text-zinc-400" />
+                      )}
                     </div>
                     <span className="text-xs text-zinc-500 truncate">
-                      Miniatura de confirmação
+                      {imagePreviewError
+                        ? "Não foi possível carregar a imagem"
+                        : "Miniatura de confirmação"}
                     </span>
                   </div>
                 )}
@@ -520,7 +603,7 @@ export default function NewOfferPage() {
                       htmlFor="promotionalPrice"
                       className="text-xs font-bold text-[#E52427] uppercase tracking-wider flex items-center gap-1 mb-1"
                     >
-                      <DollarSign className="w-3.5 h-3.5" /> Preço promocional
+                      <DollarSign className="w-3.5 h-3.5" /> Preço promocional *
                     </Label>
                     <Input
                       id="promotionalPrice"
@@ -602,7 +685,7 @@ export default function NewOfferPage() {
           </CardContent>
         </Card>
 
-        {/* Gerenciamento de Ofertas */}
+        {/* Listagem e Gerenciamento */}
         <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
           <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 px-5 py-4">
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
@@ -651,12 +734,20 @@ export default function NewOfferPage() {
                               .toFixed(2)
                               .replace(".", ",")}
                           </span>
-                          {/* {offer.stores?.name && (
+                          {offer.stores?.name && (
                             <>
                               <span>•</span>
                               <span>{offer.stores.name}</span>
                             </>
-                          )} */}
+                          )}
+                          {offer.categories?.name && (
+                            <>
+                              <span>•</span>
+                              <span className="bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                                {offer.categories.name}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
