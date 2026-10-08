@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { OfferCard } from "@/components/offer-card";
-import { Offer } from "@/types";
+import { Offer, Category } from "@/types";
 import { Search, Store, X } from "lucide-react";
+import { CategoryMenu } from "@/components/category-menu";
 
 interface OffersListProps {
   initialOffers: Offer[];
+  categories: Category[];
 }
 
 // Função para remover acentos e converter para minúsculas
@@ -18,11 +21,17 @@ function normalizeText(text: string): string {
     .trim();
 }
 
-export function OffersList({ initialOffers }: OffersListProps) {
-  // Controle de visibilidade do painel expandido (loja + botão)
+export function OffersList({ initialOffers, categories }: OffersListProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Lê a categoria ativa diretamente da URL em tempo real
+  const selectedCategory = searchParams.get("category");
+
+  // Controle de visibilidade do painel expandido
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Estados dos inputs (filtragem em tempo real)
+  // Estados dos demais filtros
   const [searchInput, setSearchInput] = useState("");
   const [storeInput, setStoreInput] = useState("ALL");
 
@@ -37,19 +46,24 @@ export function OffersList({ initialOffers }: OffersListProps) {
     return Array.from(storeMap.entries()).map(([id, name]) => ({ id, name }));
   }, [initialOffers]);
 
-  // Previne comportamento padrão do formulário ao clicar em Buscar/dar Enter
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
   }
 
-  // Reseta todos os filtros
+  // Reseta todos os filtros (inclusive remove ?category da URL)
   function handleClear() {
     setSearchInput("");
     setStoreInput("ALL");
     setIsExpanded(false);
+    router.push("/");
   }
 
-  // Filtragem em TEMPO REAL (ignora acentos e case sensitivity)
+  // Categoria ativa (para o banner de aviso visual)
+  const activeCategory = useMemo(() => {
+    return categories?.find((c) => c.id === selectedCategory);
+  }, [categories, selectedCategory]);
+
+  // Filtragem em tempo real considerando Busca, Loja e Categoria da URL
   const filteredOffers = useMemo(() => {
     const normalizedSearch = normalizeText(searchInput);
 
@@ -60,11 +74,15 @@ export function OffersList({ initialOffers }: OffersListProps) {
       const matchesStore =
         storeInput === "ALL" || offer.store_id === storeInput;
 
-      return matchesSearch && matchesStore;
-    });
-  }, [initialOffers, searchInput, storeInput]);
+      const matchesCategory =
+        !selectedCategory || offer.category_id === selectedCategory;
 
-  const hasActiveFilters = searchInput.trim() !== "" || storeInput !== "ALL";
+      return matchesSearch && matchesStore && matchesCategory;
+    });
+  }, [initialOffers, searchInput, storeInput, selectedCategory]);
+
+  const hasActiveFilters =
+    searchInput.trim() !== "" || storeInput !== "ALL" || !!selectedCategory;
 
   return (
     <div className="space-y-6">
@@ -73,35 +91,39 @@ export function OffersList({ initialOffers }: OffersListProps) {
         onSubmit={handleSubmit}
         className="flex flex-col gap-3 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all"
       >
-        {/* Linha 1: Campo de texto da pesquisa */}
-        <div className="relative w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Pesquisar oferta ou produto..."
-            value={searchInput}
-            onFocus={() => setIsExpanded(true)}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-              if (!isExpanded) setIsExpanded(true);
-            }}
-            className="w-full pl-10 pr-9 py-2.5 text-sm bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5B50B1] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
-          />
-          {searchInput && (
-            <button
-              type="button"
-              onClick={() => setSearchInput("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+        {/* Linha 1: Campo de busca + Menu de Categorias */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Pesquisar oferta ou produto..."
+              value={searchInput}
+              onFocus={() => setIsExpanded(true)}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                if (!isExpanded) setIsExpanded(true);
+              }}
+              className="w-full pl-10 pr-9 py-2.5 text-sm bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5B50B1] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => setSearchInput("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Menu de Categorias ao lado da busca */}
+          <CategoryMenu categories={categories || []} />
         </div>
 
-        {/* Linha 2: Exibida após clicar ou digitar no campo de busca */}
+        {/* Linha 2: Dropdown de lojas e botão Buscar */}
         {(isExpanded || hasActiveFilters) && (
           <div className="flex items-center gap-2 w-full pt-1 animate-in fade-in duration-200">
-            {/* Dropdown de Lojas */}
             <div className="relative flex-1">
               <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
               <select
@@ -118,7 +140,6 @@ export function OffersList({ initialOffers }: OffersListProps) {
               </select>
             </div>
 
-            {/* Botão Buscar */}
             <button
               type="submit"
               className="px-5 py-2.5 bg-[#5B50B1] hover:bg-[#4a4096] text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-sm shrink-0 flex items-center gap-1.5"
@@ -129,13 +150,24 @@ export function OffersList({ initialOffers }: OffersListProps) {
           </div>
         )}
 
-        {/* Link para limpar busca caso haja filtro ativo */}
+        {/* Indicador de filtro ativo e botão para limpar */}
         {hasActiveFilters && (
-          <div className="pt-1 flex justify-end">
+          <div className="pt-1 flex items-center justify-between text-xs">
+            {activeCategory ? (
+              <span className="font-semibold text-zinc-600 dark:text-zinc-400">
+                Categoria:{" "}
+                <strong className="text-[#5B50B1]">
+                  {activeCategory.name}
+                </strong>
+              </span>
+            ) : (
+              <span />
+            )}
+
             <button
               type="button"
               onClick={handleClear}
-              className="text-xs font-semibold text-[#E52427] hover:underline"
+              className="font-semibold text-[#E52427] hover:underline"
             >
               Limpar busca
             </button>
@@ -143,7 +175,7 @@ export function OffersList({ initialOffers }: OffersListProps) {
         )}
       </form>
 
-      {/* Lista de Ofertas */}
+      {/* Lista de Cards */}
       {filteredOffers.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredOffers.map((offer) => (

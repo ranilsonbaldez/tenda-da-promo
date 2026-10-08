@@ -1,17 +1,25 @@
 import { supabase } from "@/lib/supabase";
-import { Offer } from "@/types";
+import { Offer, Category } from "@/types";
 import { OffersList } from "@/components/offers-list";
+import { CategoryMenu } from "@/components/category-menu";
 
 export const revalidate = 0;
 
 export default async function HomePage() {
   const now = new Date().toISOString();
 
+  // 1. Buscar Ofertas com os relacionamentos
   const { data: offers } = await supabase
     .from("offers")
     .select("*, stores(name, logo_url), categories(name, slug)")
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order("created_at", { ascending: false });
+
+  // 2. Buscar Categorias para o Menu
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, slug")
+    .order("name", { ascending: true });
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
@@ -41,6 +49,13 @@ export default async function HomePage() {
               Quem procura preço baixo, acampa aqui.
             </span>
           </div>
+
+          {/* NOVO: Menu Hambúrguer no Topo Amarelo */}
+          <div className="flex items-center">
+            <CategoryMenu categories={(categories as Category[]) || []} />
+          </div>
+
+          {/* O menu de categorias será renderizado pelo OffersList ou colocado aqui via Client Wrapper se necessário */}
         </div>
       </header>
 
@@ -58,7 +73,10 @@ export default async function HomePage() {
 
       {/* Vitrine de Produtos com Filtro e Pesquisa */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <OffersList initialOffers={(offers as Offer[]) || []} />
+        <OffersList
+          initialOffers={(offers as Offer[]) || []}
+          categories={(categories as Category[]) || []}
+        />
       </main>
 
       {/* Rodapé simples */}
