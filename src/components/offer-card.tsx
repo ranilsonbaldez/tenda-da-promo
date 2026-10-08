@@ -236,7 +236,7 @@ ${
           </div>
         )}
 
-        <h3 className="font-semibold text-sm line-clamp-2 w-full text-zinc-800 dark:text-zinc-200 mb-2 min-h-10">
+        <h3 className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-tight">
           {offer.title}
         </h3>
 
@@ -252,24 +252,27 @@ ${
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-3 sm:p-4 pt-0">
         <Button
           onClick={handleAction}
-          className="w-full bg-[#c2650e] hover:bg-[#8a4301] text-white font-bold flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-all border-none"
+          className="w-full bg-[#c2650e] hover:bg-[#8a4301] text-white font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] transition-all border-none h-9 sm:h-10 text-xs sm:text-sm px-2"
         >
           {offer.coupon_code ? (
             <>
               {copied ? (
-                <Check className="w-4 h-4 text-[#FACC15]" />
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FACC15] shrink-0" />
               ) : (
-                <Copy className="w-4 h-4" />
+                <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               )}
-              {copied ? "Cupom Copiado!" : "Copiar Cupom & Ir"}
+              <span className="truncate">
+                {copied ? "Copiado!" : "Copiar Cupom"}
+              </span>
             </>
           ) : (
             <>
-              <ExternalLink className="w-4 h-4" />
-              Pegar Promoção
+              <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="hidden sm:inline">Pegar Promoção</span>
+              <span className="sm:hidden">Ver Promo</span>
             </>
           )}
         </Button>
