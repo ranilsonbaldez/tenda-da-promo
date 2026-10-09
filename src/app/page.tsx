@@ -60,9 +60,6 @@ export default async function HomePage() {
         </div>
       </header>
 
-      {/* 2. Banner do WhatsApp fixo logo abaixo do topo */}
-      <WhatsappBanner />
-
       {/* Banner Informativo Fixo (Roxo da Marca) */}
       <div className="bg-[#5B50B1] text-white font-medium py-2 px-4 text-left text-xs md:text-sm shadow-inner">
         <div className="max-w-7xl mx-auto">
@@ -74,6 +71,9 @@ export default async function HomePage() {
           lugar.
         </div>
       </div>
+
+      {/* 2. Banner do WhatsApp fixo logo abaixo do topo */}
+      <WhatsappBanner />
 
       {/* Vitrine de Produtos com Filtro e Pesquisa */}
       <main className="max-w-7xl mx-auto px-4 py-8">
