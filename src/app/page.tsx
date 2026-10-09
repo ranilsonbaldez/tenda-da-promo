@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { Offer, Category } from "@/types";
 import { OffersList } from "@/components/offers-list";
 import { CategoryMenu } from "@/components/category-menu";
+import { WhatsappBanner } from "@/components/whatsapp-banner";
 
 export const revalidate = 0;
 
@@ -58,6 +59,9 @@ export default async function HomePage() {
           {/* O menu de categorias será renderizado pelo OffersList ou colocado aqui via Client Wrapper se necessário */}
         </div>
       </header>
+
+      {/* 2. Banner do WhatsApp fixo logo abaixo do topo */}
+      <WhatsappBanner />
 
       {/* Banner Informativo Fixo (Roxo da Marca) */}
       <div className="bg-[#5B50B1] text-white font-medium py-2 px-4 text-left text-xs md:text-sm shadow-inner">
