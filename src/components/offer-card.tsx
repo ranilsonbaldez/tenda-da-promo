@@ -100,6 +100,13 @@ export function OfferCard({ offer }: OfferCardProps) {
     const shareUrl = `https://tenda-da-promo.vercel.app/ir/${productIdentifier}`;
     const siteUrl = "tenda-da-promo.vercel.app";
 
+    // Probabilidade de 30% de aparecer o rodapé (0.3 = 30%)
+    const includeFooter = Math.random() < 0.3;
+
+    const footerText = includeFooter
+      ? `\n\n---\n⛺ *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*\n🔗 ${siteUrl}`
+      : "";
+
     // Texto limpo sem induzir preview da loja
     const shareText = `${randomTitle}
 
@@ -107,14 +114,10 @@ export function OfferCard({ offer }: OfferCardProps) {
 
 ${
   offer.original_price && offer.original_price > offer.promotional_price
-    ? `🔥 DE ~${Number(offer.original_price).toFixed(2).replace(".", ",")}~ | POR *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*`
+    ? `🔥 DE ~${Number(offer.original_price).toFixed(2).replace(".", ",")}~ \vert{} POR *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*`
     : `💰 Por apenas: *${Number(offer.promotional_price).toFixed(2).replace(".", ",")} no Pix*`
-}${offer.coupon_code ? `🎟️ Cupom: *${offer.coupon_code}*` : ""}
-🔗 ${shareUrl}
-
----
-⛺ *CONFIRA OUTRAS OFERTAS NO NOSSO SITE:*
-🔗 ${siteUrl}`;
+}${offer.coupon_code ? `\n🎟️ Cupom: *${offer.coupon_code}*` : ""}
+🔗 ${shareUrl}${footerText}`;
 
     // Prepara o link direto para o WhatsApp Web
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
