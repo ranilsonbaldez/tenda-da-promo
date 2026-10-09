@@ -57,6 +57,9 @@ interface Offer {
 }
 
 export default function NewOfferPage() {
+  const [autoUrl, setAutoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+
   // Estados de dados
   const [stores, setStores] = useState<Store[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -89,6 +92,46 @@ export default function NewOfferPage() {
   const [categoryId, setCategoryId] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
+
+  const handleAutoFill = async () => {
+    if (!autoUrl) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/scrape-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: autoUrl }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        if (data.title) setTitle(data.title);
+        if (data.image) setImageUrl(data.image);
+        if (data.affiliate_url) setAffiliateLink(data.affiliate_url);
+        if (data.promotional_price) setPromotionalPrice(data.promotional_price);
+        if (data.original_price) setOriginalPrice(data.original_price);
+
+        // PROCURA A LOJA NA LISTA EXISTENTE E SELECIONA O ID
+        if (data.store && stores.length > 0) {
+          const matchedStore = stores.find(
+            (s) => s.name.toLowerCase() === data.store.toLowerCase(),
+          );
+
+          if (matchedStore) {
+            // Substitua 'setStoreId' pelo nome do seu estado que guarda
+            // o ID ou valor da loja selecionada no <select>
+            setStoreId(matchedStore.id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Falha ao puxar dados do produto", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Carregar dados iniciais (Lojas, Categorias e Ofertas)
   useEffect(() => {
@@ -412,6 +455,34 @@ export default function NewOfferPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="p-4 bg-white rounded-lg border max-w-2xl mx-auto">
+                {/* CAMPO DE AUTO-PREENCHIMENTO NO TOPO */}
+                <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 mb-6">
+                  <label className="block text-xs font-bold text-amber-900 mb-1">
+                    ⚡ AUTO-PREENCHER COM LINK DA LOJA
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="Cole o link do produto aqui..."
+                      value={autoUrl}
+                      onChange={(e) => setAutoUrl(e.target.value)}
+                      className="flex-1 p-2 border rounded text-sm text-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAutoFill}
+                      disabled={loading}
+                      className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-4 py-2 rounded text-sm transition-colors disabled:opacity-50"
+                    >
+                      {loading ? "Puxando..." : "Puxar Dados"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* AQUI CONTINUA O SEU FORMULÁRIO COM OS SEUS INPUTS EXISTENTES */}
+              </div>
+
               {/* Título, Loja, Categoria e Cupom */}
               <div className="space-y-3">
                 <div>
