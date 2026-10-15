@@ -94,6 +94,9 @@ export default function NewOfferPage() {
   const [expiresAt, setExpiresAt] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
 
+  const [selectedCategoryFilter, setSelectedCategoryFilter] =
+    useState<string>("all");
+
   const handleAutoFill = async () => {
     if (!autoUrl) return;
     setLoading(true);
@@ -383,6 +386,11 @@ export default function NewOfferPage() {
       setIsSubmitting(false);
     }
   }
+
+  const filteredOffers = offers.filter((offer) => {
+    if (selectedCategoryFilter === "all") return true;
+    return offer.category_id === selectedCategoryFilter;
+  });
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 px-3 py-4 md:p-8">
@@ -763,7 +771,32 @@ export default function NewOfferPage() {
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
               <ListOrdered className="w-5 h-5 text-[#5B50B1]" /> Ofertas
               Cadastradas ({offers.length})
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-zinc-500">
+                  Filtrar por:
+                </span>
+                <select
+                  value={selectedCategoryFilter}
+                  onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                  className="h-8 text-xs bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 font-medium text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#5B50B1]"
+                >
+                  <option value="all">
+                    Todas as Categorias ({offers.length})
+                  </option>
+                  {categories.map((cat) => {
+                    const count = offers.filter(
+                      (o) => o.category_id === cat.id,
+                    ).length;
+                    return (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </CardTitle>
+            {/* Select de Filtro por Categoria */}
           </CardHeader>
           <CardContent className="p-0">
             {isLoadingOffers ? (
@@ -775,9 +808,13 @@ export default function NewOfferPage() {
               <div className="p-8 text-center text-zinc-500 text-sm">
                 Nenhuma oferta cadastrada até o momento.
               </div>
+            ) : filteredOffers.length === 0 ? (
+              <div className="p-8 text-center text-zinc-500 text-sm">
+                Nenhuma oferta encontrada para a categoria selecionada.
+              </div>
             ) : (
               <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {offers.map((offer) => (
+                {filteredOffers.map((offer) => (
                   <div
                     key={offer.id}
                     className="p-4 flex items-center justify-between gap-3 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors"
