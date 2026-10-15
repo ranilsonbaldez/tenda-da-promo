@@ -210,7 +210,13 @@ ${
         )}
 
         <div className="w-full flex items-center justify-between mb-2 gap-2">
-          <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider truncate">
+          {offer.categories?.name && (
+            <span className="inline-block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md truncate shrink min-w-0">
+              {offer.categories.name}
+            </span>
+          )}
+
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider whitespace-nowrap shrink-0">
             {offer.stores?.name}
           </span>
 
@@ -231,13 +237,6 @@ ${
         </div>
 
         {/* Categoria (Logo abaixo da loja e acima do título) */}
-        {offer.categories?.name && (
-          <div className="w-full flex justify-start mb-1.5">
-            <span className="inline-block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
-              {offer.categories.name}
-            </span>
-          </div>
-        )}
 
         <h3 className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-tight">
           {offer.title}
