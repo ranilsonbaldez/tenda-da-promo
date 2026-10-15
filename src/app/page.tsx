@@ -6,15 +6,27 @@ import { WhatsappBanner } from "@/components/whatsapp-banner";
 
 export const revalidate = 0;
 
+// Função para embaralhar o array de ofertas
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export default async function HomePage() {
   const now = new Date().toISOString();
 
-  // 1. Buscar Ofertas com os relacionamentos
-  const { data: offers } = await supabase
+  // 1. Buscar Ofertas ativas sem ordenação fixa
+  const { data: rawOffers } = await supabase
     .from("offers")
     .select("*, stores(name, logo_url), categories(name, slug)")
-    .or(`expires_at.is.null,expires_at.gt.${now}`)
-    .order("created_at", { ascending: false });
+    .or(`expires_at.is.null,expires_at.gt.${now}`);
+
+  // Embaralha o resultado a cada requisição
+  const offers = shuffleArray((rawOffers as Offer[]) || []);
 
   // 2. Buscar Categorias para o Menu
   const { data: categories } = await supabase
@@ -51,12 +63,10 @@ export default async function HomePage() {
             </span>
           </div>
 
-          {/* NOVO: Menu Hambúrguer no Topo Amarelo */}
+          {/* Menu Hambúrguer no Topo Amarelo */}
           <div className="flex items-center">
             <CategoryMenu categories={(categories as Category[]) || []} />
           </div>
-
-          {/* O menu de categorias será renderizado pelo OffersList ou colocado aqui via Client Wrapper se necessário */}
         </div>
       </header>
 
@@ -72,13 +82,13 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* 2. Banner do WhatsApp fixo logo abaixo do topo */}
+      {/* Banner do WhatsApp fixo logo abaixo do topo */}
       <WhatsappBanner />
 
       {/* Vitrine de Produtos com Filtro e Pesquisa */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <OffersList
-          initialOffers={(offers as Offer[]) || []}
+          initialOffers={offers}
           categories={(categories as Category[]) || []}
         />
       </main>
