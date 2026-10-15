@@ -1,33 +1,47 @@
 import { NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 
+if (process.env.NODE_ENV === "development") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const url = body?.url;
 
     if (!url) {
-      return NextResponse.json({ error: "URL e obrigatoria" }, { status: 400 });
+      return NextResponse.json({ error: "URL é obrigatória" }, { status: 400 });
     }
 
-    let store = "Outra";
-    if (url.includes("mercadolivre") || url.includes("mercadolibre")) {
-      store = "Mercado Livre";
-    } else if (url.includes("amazon")) {
-      store = "Amazon";
-    } else if (url.includes("shopee")) {
-      store = "Shopee";
-    } else if (url.includes("aliexpress")) {
-      store = "AliExpress";
-    } else if (url.includes("magazineluiza") || url.includes("magalu")) {
-      store = "Magalu";
-    }
+    // Função interna para identificar a loja considerando encurtadores
+    const detectStore = (targetUrl: string): string => {
+      const lower = targetUrl.toLowerCase();
+      if (
+        lower.includes("mercadolivre") ||
+        lower.includes("mercadolibre") ||
+        lower.includes("meli.la")
+      ) {
+        return "Mercado Livre";
+      } else if (lower.includes("amazon") || lower.includes("amzn.to")) {
+        return "Amazon";
+      } else if (lower.includes("shopee") || lower.includes("shp.ee")) {
+        return "Shopee";
+      } else if (lower.includes("aliexpress")) {
+        return "AliExpress";
+      } else if (lower.includes("magazineluiza") || lower.includes("magalu")) {
+        return "Magalu";
+      }
+      return "Outra";
+    };
 
+    let store = detectStore(url);
     let title = "";
     let image = "";
     let promotionalPrice = "";
     let originalPrice = "";
 
+    // 1. Processamento específico do Mercado Livre
     if (store === "Mercado Livre") {
       try {
         const redirectRes = await fetch(url, {
@@ -39,7 +53,10 @@ export async function POST(request: Request) {
           },
         });
 
+        // Atualiza para a URL final expandida (ex: https://produto.mercadolivre.com.br/MLB-...)
         const finalUrl = redirectRes.url || url;
+        store = detectStore(finalUrl);
+
         const htmlML = await redirectRes.text();
         const $ml = cheerio.load(htmlML);
 
@@ -125,7 +142,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Processamento genérico limpo
+    // 2. Processamento genérico para outras lojas
     const response = await fetch(url, {
       headers: {
         "User-Agent":
