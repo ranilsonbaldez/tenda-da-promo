@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ArrowLeft,
+  ExternalLink,
   Loader2,
   PlusCircle,
   CheckCircle2,
@@ -824,6 +825,30 @@ export default function NewOfferPage() {
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          let targetUrl = offer.affiliate_link;
+                          if (targetUrl) {
+                            if (
+                              !targetUrl.startsWith("http://") &&
+                              !targetUrl.startsWith("https://")
+                            ) {
+                              targetUrl = `https://${targetUrl}`;
+                            }
+                            window.open(
+                              targetUrl,
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
+                          }
+                        }}
+                        className="h-8 text-xs font-semibold text-blue-600 hover:text-blue-700 border-blue-200 hover:bg-blue-50 flex items-center gap-1.5"
+                        title="Abrir link da oferta em nova aba"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
                       <Button
                         type="button"
                         variant="outline"
